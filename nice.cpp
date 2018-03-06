@@ -162,6 +162,73 @@ void regra3(int vertex, int pai){
 }
 
 
+vector<int> newBag(vector<int> intersection,vector<int> bag){
+	unsigned int i;
+
+	for(i = 0;i < bag.size();i++){
+		if(find(intersection.begin(),intersection.end(),bag[i]) == intersection.end()){
+			bag.erase(bag.begin() + i);
+			break;
+		}
+	}
+	return bag;
+}
+
+void regra4(int vertex,int pai){
+	int filho;
+	unsigned int j;
+	vector<int> intersection;
+	unsigned int interSize;
+	int u,v;
+	unsigned int sizeMin,sizeMax;
+	vector<int> treeAux;
+
+	if(tree[vertex].size() == 2 || (tree[vertex].size() == 1 && pai == -1)){
+		for(j = 0; j < tree[vertex].size();j++){
+			if(tree[vertex][j] != pai){
+				filho = tree[vertex][j];
+			}
+		}
+
+		set_intersection(vetorBags[vertex].begin(),vetorBags[vertex].end(),vetorBags[filho].begin(),vetorBags[filho].end(),intersection.begin());
+		interSize = intersection.size();
+		sizeMin = min(vetorBags[vertex].size(),vetorBags[filho].size());
+		sizeMax = max(vetorBags[vertex].size(),vetorBags[filho].size());
+
+		//se as bags nao forem adequadas
+		if(!(sizeMax - sizeMin == 1 && interSize == sizeMin)){
+			//tirar ligacao entre elas
+			tree[vertex].erase(find(tree[vertex].begin(),tree[vertex].end(),filho));
+			tree[filho].erase(find(tree[filho].begin(),tree[filho].end(),vertex));
+
+			//reduzir até a intersecao
+			u = vertex;
+			while(vetorBags[u].size() != interSize){
+				bags++;
+				tree.push_back(treeAux);
+				vetorBags.push_back(treeAux);
+				v = bags;
+				tree[u].push_back(v);
+				tree[v].push_back(u);
+				vetorBags[v] = newBag(intersection,vetorBags[u]);
+
+				u =  v;
+			}
+
+			//agora aumentar até chegar ao filho!
+			while(vetorBags[u].size() != interSize){
+
+
+			}
+
+		}
+	}
+
+
+
+}
+
+
 int main(){
 	int tam_bag;
 	int n,m;
