@@ -8,12 +8,16 @@ vector<int> terminals;
 vector< vector<int> > vetorBags;
 int bags;
 int root;
+int tam_bag;
 
 void funcDebug(){
 	int i;
 	unsigned int j;
 
-	cout << "temos " << bags << " bags na TD" << endl;
+	cout << "root: " << root << endl;
+	cout << "bags: " << bags << endl;
+	cout << "tree nodes: " << tree.size() - 1 << endl;
+	cout << "tam vetor bags: " << vetorBags.size() - 1 << endl;
 
 	cout << "bags" << endl << endl;
 	for(i = 1;i <= bags;i++){
@@ -162,6 +166,7 @@ void regra3(int vertex, int pai){
 }
 
 
+//fazer nova bag com um elemento a menos fora da intersecao
 vector<int> newBag(vector<int> intersection,vector<int> bag){
 	unsigned int i;
 
@@ -174,15 +179,32 @@ vector<int> newBag(vector<int> intersection,vector<int> bag){
 	return bag;
 }
 
+//fazer nova bag com um elemento a mais alem da bag inicial
+vector<int> newBagMaior(vector<int> bag,vector<int> bagTotal){
+	unsigned int i;
+
+	for(i = 0;i < bagTotal.size();i++){
+		if(find(bag.begin(),bag.end(),bagTotal[i]) == bag.end()){
+			bag.push_back(bagTotal[i]);
+			sort(bag.begin(),bag.end());
+			break;
+		}
+	}
+	return bag;
+}
+
 void regra4(int vertex,int pai){
 	int filho;
 	unsigned int j;
-	vector<int> intersection;
+	vector<int> intersection(tam_bag);
+	vector<int>::iterator it;
 	unsigned int interSize;
 	int u,v;
 	unsigned int sizeMin,sizeMax;
 	vector<int> treeAux;
 
+
+	//se tiver exatamente um filho
 	if(tree[vertex].size() == 2 || (tree[vertex].size() == 1 && pai == -1)){
 		for(j = 0; j < tree[vertex].size();j++){
 			if(tree[vertex][j] != pai){
@@ -190,7 +212,10 @@ void regra4(int vertex,int pai){
 			}
 		}
 
-		set_intersection(vetorBags[vertex].begin(),vetorBags[vertex].end(),vetorBags[filho].begin(),vetorBags[filho].end(),intersection.begin());
+		//verificar intersecao para fazer a ligacao entre as bags
+		it = set_intersection(vetorBags[vertex].begin(),vetorBags[vertex].end(),vetorBags[filho].begin(),vetorBags[filho].end(),intersection.begin());
+		intersection.resize(it - intersection.begin());
+
 		interSize = intersection.size();
 		sizeMin = min(vetorBags[vertex].size(),vetorBags[filho].size());
 		sizeMax = max(vetorBags[vertex].size(),vetorBags[filho].size());
@@ -202,8 +227,9 @@ void regra4(int vertex,int pai){
 			tree[filho].erase(find(tree[filho].begin(),tree[filho].end(),vertex));
 
 			//reduzir até a intersecao
+			//lembrar do caso onde sao subconjuntos
 			u = vertex;
-			while(vetorBags[u].size() != interSize){
+			while(vetorBags[u].size() > interSize + 1){
 				bags++;
 				tree.push_back(treeAux);
 				vetorBags.push_back(treeAux);
@@ -215,22 +241,53 @@ void regra4(int vertex,int pai){
 				u =  v;
 			}
 
-			//agora aumentar até chegar ao filho!
-			while(vetorBags[u].size() != interSize){
+			//se o filho é subconjunto de vertex, isto é, paramos um vertice antes da intersecao
+			if(vetorBags[filho].size() == interSize){
+				//ligue o ultimo auxiliar ao filho
+				tree[u].push_back(filho);
+				tree[filho].push_back(u);
+			}else{
+				// terminar de chegar até a intersecao se necessario
+				if(vetorBags[u].size() != interSize){
+					bags++;
+					tree.push_back(treeAux);
+					vetorBags.push_back(treeAux);
+					v = bags;
+					tree[u].push_back(v);
+					tree[v].push_back(u);
+					vetorBags[v] = newBag(intersection,vetorBags[u]);
+					u = v;
+				}
 
-
+				//agora aumentar até chegar ao filho!
+				while(vetorBags[u].size() < vetorBags[filho].size() - 1){
+					bags++;
+					tree.push_back(treeAux);
+					vetorBags.push_back(treeAux);
+					v = bags;
+					tree[u].push_back(v);
+					tree[v].push_back(u);
+					vetorBags[v] = newBagMaior(vetorBags[u],vetorBags[filho]);
+					u = v;
+				}
+				//agora ligar com o filho o ultimo vertice auxiliar
+				tree[u].push_back(filho);
+				tree[filho].push_back(u);
 			}
-
 		}
 	}
 
-
+	for(j = 0; j < tree[vertex].size();j++){
+		if(tree[vertex][j] == pai){
+			continue;
+		}
+		regra4(tree[vertex][j],vertex);
+	}
 
 }
 
 
 int main(){
-	int tam_bag;
 	int n,m;
 	string str;
 	int u,v,w;
@@ -247,7 +304,7 @@ int main(){
 	unsigned int j;
 	vector<int> bagsAux;
 	string str2;
-	int debug = 1;
+	int debug = 0;
 
 	cin >> str;
 	cin >> str;
@@ -359,6 +416,7 @@ int main(){
 	regra1();
 	regra2(root,-1);
 	regra3(root,-1);
+	regra4(root,-1);
 
 	if(debug){
 		funcDebug();
