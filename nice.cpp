@@ -67,7 +67,8 @@ void regra2(int vertex,int pai){
 	vector<int> treeAux;
 	int novo;
 	int ok;
-
+        
+        
 	//se vertex tem mais de 2 filhos
 	if(tree[vertex].size() > 3){
 		//create new node
@@ -78,7 +79,8 @@ void regra2(int vertex,int pai){
 		tree[vertex].push_back(novo);
 		vetorBags.push_back(treeAux);
 		vetorBags[novo] = vetorBags[vertex];
-
+                
+                ok = 0;
 		//realocar os filhos de vertex
 		for(j = 0; j < tree[vertex].size();j++){
 			if(tree[vertex][j] == pai || tree[vertex][j] == novo){
@@ -112,7 +114,8 @@ void regra3(int vertex, int pai){
 	unsigned int j;
 	vector<int> treeAux;
 	int indiceF1;
-
+    
+        
 	if(tree[vertex].size() == 3){
 		for(j = 0; j < tree[vertex].size();j++){
 			if(tree[vertex][j] != pai){
@@ -202,7 +205,6 @@ void regra4(int vertex,int pai){
 	int u,v;
 	unsigned int sizeMin,sizeMax;
 	vector<int> treeAux;
-
 
 	//se tiver exatamente um filho
 	if(tree[vertex].size() == 2 || (tree[vertex].size() == 1 && pai == -1)){
@@ -411,7 +413,7 @@ int main(){
 	for(i = 1; i <= bags;i++){
 		sort(vetorBags[i].begin(),vetorBags[i].end());
 	}
-
+        
 
 	regra1();
 	regra2(root,-1);
