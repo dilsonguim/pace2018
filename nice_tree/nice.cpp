@@ -31,7 +31,18 @@ void Nice::Debug(){
 
 }
 
-//fazer com que as raizes sejam vazias e definir root
+int Nice::findTerminal(vector<int> bag,vector<bool> isTerminal){
+	unsigned int i;
+
+	for(i = 0; i < bag.size();i++){
+		if(isTerminal[bag[i]]){
+			return bag[i];
+		}
+	}
+	return -1;
+}
+
+//fazer com que as raizes tenham um elemento e definir root
 void Nice::regra1(){
 	int i;
 	int prevBags;
@@ -42,15 +53,18 @@ void Nice::regra1(){
 	for(i = 1; i <= prevBags;i++){
 		//se eh folha
 		if(tree[i].size() == 1){
-			bag_count++;
-			bags.push_back(aux_bag_count);
-			tree.push_back(aux_bag_count);
-			tree[bag_count].push_back(i);
-			tree[i].push_back(bag_count);
+			if(bags[i].size() > 1){
+				bag_count++;
+				bags.push_back(aux_bag_count);
+				tree.push_back(aux_bag_count);
+				tree[bag_count].push_back(i);
+				tree[i].push_back(bag_count);
+				//colocar um vértice na bag folha
+				bags[bag_count].push_back(bags[i][0]);
+			}
 		}
 
 	}
-	root = bag_count;
 }
 
 //deixar todos com no maximo 2 filhos
@@ -62,7 +76,7 @@ void Nice::regra2(int vertex,int pai){
         
         
 	//se vertex tem mais de 2 filhos
-	if(tree[vertex].size() > 3){
+	if(tree[vertex].size() > 3 || (tree[vertex].size() > 2 && vertex == root)){
 		//create new node
 		bag_count++;
 		novo = bag_count;
@@ -72,7 +86,7 @@ void Nice::regra2(int vertex,int pai){
 		bags.push_back(treeAux);
 		bags[novo] = bags[vertex];
                 
-                ok = 0;
+        ok = 0;
 		//realocar os filhos de vertex
 		for(j = 0; j < tree[vertex].size();j++){
 			if(tree[vertex][j] == pai || tree[vertex][j] == novo){
@@ -108,7 +122,7 @@ void Nice::regra3(int vertex, int pai){
 	int indiceF1;
     
         
-	if(tree[vertex].size() == 3){
+	if(tree[vertex].size() == 3 || (tree[vertex].size() == 2 && vertex == root)){
 		for(j = 0; j < tree[vertex].size();j++){
 			if(tree[vertex][j] != pai){
 				if(f1 == -1){
@@ -119,7 +133,7 @@ void Nice::regra3(int vertex, int pai){
 				}
 			}
 		}
-		//se as bag_count forem diferentes crie auxiliar igual
+		//se as bags forem diferentes crie auxiliar igual
 		if(bags[f1].size() != bags[vertex].size() || !equal(bags[f1].begin(),bags[f1].end(),bags[vertex].begin())){
 			bag_count++;
 			tree.push_back(treeAux);
@@ -134,7 +148,7 @@ void Nice::regra3(int vertex, int pai){
 
 		}
 
-		//se as bag_count forem diferentes crie auxiliar igual
+		//se as bags forem diferentes crie auxiliar igual
 		if(bags[f2].size() != bags[vertex].size() || !equal(bags[f2].begin(),bags[f2].end(),bags[vertex].begin())){
 			bag_count++;
 			tree.push_back(treeAux);
@@ -188,6 +202,7 @@ vector<int> Nice::newBagMaior(vector<int> bag,vector<int> bagTotal){
 	return bag;
 }
 
+//fazer a transiçao entre uma bag e outra de modo a respeitar que so tenha nodos forget ou introduce
 void Nice::regra4(int vertex,int pai){
 	int filho;
 	unsigned int j;
@@ -280,144 +295,37 @@ void Nice::regra4(int vertex,int pai){
 
 }
 
+void Nice::chooseRoot(){
+	unsigned int i;
 
-void Nice::DoStuff() {
-	int n,m;
-	string str;
-	int u,v,w;
-	vector< pair<int,int> > aux;
-	pair<int,int> p1;
-	pair<int,int> p2;
-	int t;
-	vector<int> treeAux;
-	int index;
-	int vertex;
-	string line;
-	int numTerminals;
-	int i;
-	unsigned int j;
-	vector<int> aux_bag_count;
-	string str2;
-	int debug = 0;
-
-	cin >> str;
-	cin >> str;
-	cin >> str;
-	cin >> n;
-	cin >> str;
-	cin >> m;
-
-
-	for(i = 0; i<= n;i++){
-		grafo.push_back(aux);
-	}
-
-	cin >> str;
-	while(str.compare("END") != 0){
-		cin >> u >> v >> w;
-		p1 = make_pair(v,w);
-		p2 = make_pair(u,w);
-		grafo[u].push_back(p1);
-		grafo[v].push_back(p2);
-
-		cin >> str;
-	}
-
-	cin >> str;
-	cin >> str;
-	cin >> str;
-	cin >> numTerminals;
-
-
-	cin >> str;
-	while(str.compare("END") != 0){
-		cin >> t;
-		terminals.push_back(t);
-		cin >> str;
-	}
-
-	cin >> str;
-	cin >> str;
-	cin >> str;
-	//pode haver comentario aqui
-	cin >> str;
-	if(str.compare("c") == 0){
-		getline(cin,str);
-		cin >> str;
-	}
-
-	cin >> str;
-	cin >> bag_count;
-	cin >> tam_bag;
-	cin >> n;
-
-
-	for(i = 0;i <= bag_count;i++){
-		tree.push_back(treeAux);
-		bags.push_back(aux_bag_count);
-	}
-
-
-	for(i = 1;i <= bag_count;i++){
-		cin >> str;
-		cin >> index;
-
-		if(i != bag_count){
-			while(scanf("%d",&vertex) != 0){
-				bags[index].push_back(vertex);
-			}
-		}else{
-			getline(cin,str);
-
-			while(!str.empty() && sscanf(str.c_str(),"%d",&vertex) != 0){
-				bags[index].push_back(vertex);
-
-				int ok = 0;
-				str2.clear();
-				for(j = 0;j < str.size();j++){
-					if(j == 0 && str[0] == ' '){
-						continue;
-					}
-
-					if(ok == 1){
-						str2 += str[j];
-					}else{
-						if(str[j] == ' '){
-							ok = 1;
-						}
-					}
-
-				}
-				str = str2;
-			}
+	for(i = 1; i <= bag_count; i++){
+		if(findTerminal(bags[i],isTerminal) != -1){
+			root = i;
+			return;
 		}
 	}
 
+}
 
-	for(i = 1;i <= bag_count - 1;i++){
-		cin >> u >> v;
-		
-		tree[u].push_back(v);
-		tree[v].push_back(u);
-	}
 
+void Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1) {
+	int i;
+	
+	isTerminal = isTerminal1;
+	bags = bags1;
+	tree = tree1;
+	bag_count = bags1.size() - 1;
+	tam_bag = tam_bag1;
 
 	for(i = 1; i <= bag_count;i++){
 		sort(bags[i].begin(),bags[i].end());
 	}
         
-
+	chooseRoot();
 	regra1();
 	regra2(root,-1);
 	regra3(root,-1);
 	regra4(root,-1);
-
-	if(true){
-		Debug();
-	}
-}
-
-int main() {
-  Nice nice;
-  nice.DoStuff();
+	
+	
 }

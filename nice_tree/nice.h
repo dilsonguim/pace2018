@@ -21,15 +21,19 @@ struct Nice {
 
   void regra4(int vertex, int pai);
 
-  void DoStuff();
+  int findTerminal(vector<int> bag,vector<bool> isTerminal);
 
-  vector<vector<pair<int,int>>> grafo;	//grafo
+  //unica funcao que deve ser chamada é essa, para pegar a nice.
+  void getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1);
+
+  void chooseRoot();
+
   vector<vector<int>> tree;	//nice tree decomposition
-  vector<int> terminals;	//vetor de terminais
   vector<vector<int>> bags;	//bags associadas a cada vertice da tree decomposition
   int bag_count; //numero de bags (vertices) da nice tree decomposition
   int root;	//raiz da tree decomposition
   int tam_bag;	//tamanho maximo de uma bag (tw + 1)
+  vector<bool> isTerminal;
 };
 
 #endif
