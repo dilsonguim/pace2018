@@ -1,35 +1,27 @@
-#include <bits/stdc++.h>
+#include "nice.h"
 
 using namespace std;
 
-vector<vector <pair<int,int> > > grafo;	//grafo
-vector<vector <int> > tree;	//nice tree decomposition
-vector<int> terminals;	//vetor de terminais
-vector< vector<int> > vetorBags;	//bags associadas a cada vertice da tree decomposition
-int bags; //numero de bags (vertices) da nice tree decomposition
-int root;	//raiz da tree decomposition
-int tam_bag;	//tamanho maximo de uma bag (tw + 1)
-
-void funcDebug(){
+void Nice::Debug(){
 	int i;
 	unsigned int j;
 
 	cout << "root: " << root << endl;
-	cout << "bags: " << bags << endl;
+	cout << "bag_count: " << bag_count << endl;
 	cout << "tree nodes: " << tree.size() - 1 << endl;
-	cout << "tam vetor bags: " << vetorBags.size() - 1 << endl;
+	cout << "tam vetor bags: " << bags.size() - 1 << endl;
 
-	cout << "bags" << endl << endl;
-	for(i = 1;i <= bags;i++){
+	cout << "bag_count" << endl << endl;
+	for(i = 1;i <= bag_count;i++){
 		cout << "bag: " << i << endl;
-		for(j = 0; j < vetorBags[i].size();j++){
-			cout << vetorBags[i][j] << " ";
+		for(j = 0; j < bags[i].size();j++){
+			cout << bags[i][j] << " ";
 		}
 		cout << endl;
 	}
 	
 	cout << "arvore" << endl << endl;	
-	for(i = 1;i <= bags;i++){
+	for(i = 1;i <= bag_count;i++){
 		cout << "vertice: " << i << endl;
 		for(j = 0; j < tree[i].size();j++){
 			cout << tree[i][j] << " ";
@@ -40,29 +32,29 @@ void funcDebug(){
 }
 
 //fazer com que as raizes sejam vazias e definir root
-void regra1(){
+void Nice::regra1(){
 	int i;
 	int prevBags;
-	vector<int> bagsAux;
+	vector<int> aux_bag_count;
 
-	prevBags = bags;
+	prevBags = bag_count;
 
 	for(i = 1; i <= prevBags;i++){
 		//se eh folha
 		if(tree[i].size() == 1){
-			bags++;
-			vetorBags.push_back(bagsAux);
-			tree.push_back(bagsAux);
-			tree[bags].push_back(i);
-			tree[i].push_back(bags);
+			bag_count++;
+			bags.push_back(aux_bag_count);
+			tree.push_back(aux_bag_count);
+			tree[bag_count].push_back(i);
+			tree[i].push_back(bag_count);
 		}
 
 	}
-	root = bags;
+	root = bag_count;
 }
 
 //deixar todos com no maximo 2 filhos
-void regra2(int vertex,int pai){
+void Nice::regra2(int vertex,int pai){
 	unsigned int j;
 	vector<int> treeAux;
 	int novo;
@@ -72,13 +64,13 @@ void regra2(int vertex,int pai){
 	//se vertex tem mais de 2 filhos
 	if(tree[vertex].size() > 3){
 		//create new node
-		bags++;
-		novo = bags;
+		bag_count++;
+		novo = bag_count;
 		tree.push_back(treeAux);
 		tree[novo].push_back(vertex);
 		tree[vertex].push_back(novo);
-		vetorBags.push_back(treeAux);
-		vetorBags[novo] = vetorBags[vertex];
+		bags.push_back(treeAux);
+		bags[novo] = bags[vertex];
                 
                 ok = 0;
 		//realocar os filhos de vertex
@@ -108,8 +100,8 @@ void regra2(int vertex,int pai){
 	}
 }
 
-//fazer que os nodos join sejam com bags iguais
-void regra3(int vertex, int pai){
+//fazer que os nodos join sejam com bag_count iguais
+void Nice::regra3(int vertex, int pai){
 	int f1 = -1,f2 = -1;
 	unsigned int j;
 	vector<int> treeAux;
@@ -127,33 +119,33 @@ void regra3(int vertex, int pai){
 				}
 			}
 		}
-		//se as bags forem diferentes crie auxiliar igual
-		if(vetorBags[f1].size() != vetorBags[vertex].size() || !equal(vetorBags[f1].begin(),vetorBags[f1].end(),vetorBags[vertex].begin())){
-			bags++;
+		//se as bag_count forem diferentes crie auxiliar igual
+		if(bags[f1].size() != bags[vertex].size() || !equal(bags[f1].begin(),bags[f1].end(),bags[vertex].begin())){
+			bag_count++;
 			tree.push_back(treeAux);
 			tree[vertex].erase(tree[vertex].begin() + indiceF1);
 			tree[f1].erase(find(tree[f1].begin(),tree[f1].end(),vertex));
-			tree[vertex].push_back(bags);
-			tree[bags].push_back(vertex);
-			vetorBags.push_back(treeAux);
-			vetorBags[bags] = vetorBags[vertex];
-			tree[bags].push_back(f1);
-			tree[f1].push_back(bags);
+			tree[vertex].push_back(bag_count);
+			tree[bag_count].push_back(vertex);
+			bags.push_back(treeAux);
+			bags[bag_count] = bags[vertex];
+			tree[bag_count].push_back(f1);
+			tree[f1].push_back(bag_count);
 
 		}
 
-		//se as bags forem diferentes crie auxiliar igual
-		if(vetorBags[f2].size() != vetorBags[vertex].size() || !equal(vetorBags[f2].begin(),vetorBags[f2].end(),vetorBags[vertex].begin())){
-			bags++;
+		//se as bag_count forem diferentes crie auxiliar igual
+		if(bags[f2].size() != bags[vertex].size() || !equal(bags[f2].begin(),bags[f2].end(),bags[vertex].begin())){
+			bag_count++;
 			tree.push_back(treeAux);
 			tree[vertex].erase(find(tree[vertex].begin(),tree[vertex].end(),f2));
 			tree[f2].erase(find(tree[f2].begin(),tree[f2].end(),vertex));
-			tree[vertex].push_back(bags);
-			tree[bags].push_back(vertex);
-			vetorBags.push_back(treeAux);
-			vetorBags[bags] = vetorBags[vertex];
-			tree[bags].push_back(f2);
-			tree[f2].push_back(bags);
+			tree[vertex].push_back(bag_count);
+			tree[bag_count].push_back(vertex);
+			bags.push_back(treeAux);
+			bags[bag_count] = bags[vertex];
+			tree[bag_count].push_back(f2);
+			tree[f2].push_back(bag_count);
 		}
 
 
@@ -170,7 +162,7 @@ void regra3(int vertex, int pai){
 
 
 //fazer nova bag com um elemento a menos fora da intersecao
-vector<int> newBag(vector<int> intersection,vector<int> bag){
+vector<int> Nice::newBag(vector<int> intersection,vector<int> bag){
 	unsigned int i;
 
 	for(i = 0;i < bag.size();i++){
@@ -183,7 +175,7 @@ vector<int> newBag(vector<int> intersection,vector<int> bag){
 }
 
 //fazer nova bag com um elemento a mais alem da bag inicial
-vector<int> newBagMaior(vector<int> bag,vector<int> bagTotal){
+vector<int> Nice::newBagMaior(vector<int> bag,vector<int> bagTotal){
 	unsigned int i;
 
 	for(i = 0;i < bagTotal.size();i++){
@@ -196,7 +188,7 @@ vector<int> newBagMaior(vector<int> bag,vector<int> bagTotal){
 	return bag;
 }
 
-void regra4(int vertex,int pai){
+void Nice::regra4(int vertex,int pai){
 	int filho;
 	unsigned int j;
 	vector<int> intersection(tam_bag);
@@ -214,15 +206,15 @@ void regra4(int vertex,int pai){
 			}
 		}
 
-		//verificar intersecao para fazer a ligacao entre as bags
-		it = set_intersection(vetorBags[vertex].begin(),vetorBags[vertex].end(),vetorBags[filho].begin(),vetorBags[filho].end(),intersection.begin());
+		//verificar intersecao para fazer a ligacao entre as bag_count
+		it = set_intersection(bags[vertex].begin(),bags[vertex].end(),bags[filho].begin(),bags[filho].end(),intersection.begin());
 		intersection.resize(it - intersection.begin());
 
 		interSize = intersection.size();
-		sizeMin = min(vetorBags[vertex].size(),vetorBags[filho].size());
-		sizeMax = max(vetorBags[vertex].size(),vetorBags[filho].size());
+		sizeMin = min(bags[vertex].size(),bags[filho].size());
+		sizeMax = max(bags[vertex].size(),bags[filho].size());
 
-		//se as bags nao forem adequadas
+		//se as bag_count nao forem adequadas
 		if(!(sizeMax - sizeMin == 1 && interSize == sizeMin)){
 			//tirar ligacao entre elas
 			tree[vertex].erase(find(tree[vertex].begin(),tree[vertex].end(),filho));
@@ -231,45 +223,45 @@ void regra4(int vertex,int pai){
 			//reduzir até a intersecao
 			//lembrar do caso onde sao subconjuntos
 			u = vertex;
-			while(vetorBags[u].size() > interSize + 1){
-				bags++;
+			while(bags[u].size() > interSize + 1){
+				bag_count++;
 				tree.push_back(treeAux);
-				vetorBags.push_back(treeAux);
-				v = bags;
+				bags.push_back(treeAux);
+				v = bag_count;
 				tree[u].push_back(v);
 				tree[v].push_back(u);
-				vetorBags[v] = newBag(intersection,vetorBags[u]);
+				bags[v] = newBag(intersection,bags[u]);
 
 				u =  v;
 			}
 
 			//se o filho é subconjunto de vertex, isto é, paramos um vertice antes da intersecao
-			if(vetorBags[filho].size() == interSize){
+			if(bags[filho].size() == interSize){
 				//ligue o ultimo auxiliar ao filho
 				tree[u].push_back(filho);
 				tree[filho].push_back(u);
 			}else{
 				// terminar de chegar até a intersecao se necessario
-				if(vetorBags[u].size() != interSize){
-					bags++;
+				if(bags[u].size() != interSize){
+					bag_count++;
 					tree.push_back(treeAux);
-					vetorBags.push_back(treeAux);
-					v = bags;
+					bags.push_back(treeAux);
+					v = bag_count;
 					tree[u].push_back(v);
 					tree[v].push_back(u);
-					vetorBags[v] = newBag(intersection,vetorBags[u]);
+					bags[v] = newBag(intersection,bags[u]);
 					u = v;
 				}
 
 				//agora aumentar até chegar ao filho!
-				while(vetorBags[u].size() < vetorBags[filho].size() - 1){
-					bags++;
+				while(bags[u].size() < bags[filho].size() - 1){
+					bag_count++;
 					tree.push_back(treeAux);
-					vetorBags.push_back(treeAux);
-					v = bags;
+					bags.push_back(treeAux);
+					v = bag_count;
 					tree[u].push_back(v);
 					tree[v].push_back(u);
-					vetorBags[v] = newBagMaior(vetorBags[u],vetorBags[filho]);
+					bags[v] = newBagMaior(bags[u],bags[filho]);
 					u = v;
 				}
 				//agora ligar com o filho o ultimo vertice auxiliar
@@ -289,7 +281,7 @@ void regra4(int vertex,int pai){
 }
 
 
-int main(){
+void Nice::DoStuff() {
 	int n,m;
 	string str;
 	int u,v,w;
@@ -304,7 +296,7 @@ int main(){
 	int numTerminals;
 	int i;
 	unsigned int j;
-	vector<int> bagsAux;
+	vector<int> aux_bag_count;
 	string str2;
 	int debug = 0;
 
@@ -355,30 +347,30 @@ int main(){
 	}
 
 	cin >> str;
-	cin >> bags;
+	cin >> bag_count;
 	cin >> tam_bag;
 	cin >> n;
 
 
-	for(i = 0;i <= bags;i++){
+	for(i = 0;i <= bag_count;i++){
 		tree.push_back(treeAux);
-		vetorBags.push_back(bagsAux);
+		bags.push_back(aux_bag_count);
 	}
 
 
-	for(i = 1;i <= bags;i++){
+	for(i = 1;i <= bag_count;i++){
 		cin >> str;
 		cin >> index;
 
-		if(i != bags){
+		if(i != bag_count){
 			while(scanf("%d",&vertex) != 0){
-				vetorBags[index].push_back(vertex);
+				bags[index].push_back(vertex);
 			}
 		}else{
 			getline(cin,str);
 
 			while(!str.empty() && sscanf(str.c_str(),"%d",&vertex) != 0){
-				vetorBags[index].push_back(vertex);
+				bags[index].push_back(vertex);
 
 				int ok = 0;
 				str2.clear();
@@ -402,7 +394,7 @@ int main(){
 	}
 
 
-	for(i = 1;i <= bags - 1;i++){
+	for(i = 1;i <= bag_count - 1;i++){
 		cin >> u >> v;
 		
 		tree[u].push_back(v);
@@ -410,8 +402,8 @@ int main(){
 	}
 
 
-	for(i = 1; i <= bags;i++){
-		sort(vetorBags[i].begin(),vetorBags[i].end());
+	for(i = 1; i <= bag_count;i++){
+		sort(bags[i].begin(),bags[i].end());
 	}
         
 
@@ -420,11 +412,12 @@ int main(){
 	regra3(root,-1);
 	regra4(root,-1);
 
-	if(debug){
-		funcDebug();
+	if(true){
+		Debug();
 	}
-	
-
-	return 0;
 }
 
+int main() {
+  Nice nice;
+  nice.DoStuff();
+}
