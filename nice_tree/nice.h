@@ -1,8 +1,15 @@
+//Unica funçao a ser usada é o getNiceTree para pegar a nice tree
 #ifndef H_NICE_
 #define H_NICE_
 #include <bits/stdc++.h>
 
 using namespace std;
+
+typedef struct t_nice{
+    vector<vector <int> > tree;
+    vector<vector <int>> bags;
+    int root;
+}niceTW;
 
 struct Nice {
 
@@ -24,7 +31,8 @@ struct Nice {
   int findTerminal(vector<int> bag,vector<bool> isTerminal);
 
   //unica funcao que deve ser chamada é essa, para pegar a nice.
-  void getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1);
+  //retorna uma struct niceTW com a arvore e as bags, elementos das bags ordenados, raiz garantidamente tem um terminal
+  niceTW getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1);
 
   void chooseRoot();
 

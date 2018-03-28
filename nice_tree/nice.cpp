@@ -296,7 +296,7 @@ void Nice::regra4(int vertex,int pai){
 }
 
 void Nice::chooseRoot(){
-	unsigned int i;
+	int i;
 
 	for(i = 1; i <= bag_count; i++){
 		if(findTerminal(bags[i],isTerminal) != -1){
@@ -308,7 +308,7 @@ void Nice::chooseRoot(){
 }
 
 
-void Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1) {
+niceTW Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1) {
 	int i;
 	
 	isTerminal = isTerminal1;
@@ -327,5 +327,11 @@ void Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, 
 	regra3(root,-1);
 	regra4(root,-1);
 	
-	
+	niceTW nice;
+
+	nice.tree = tree;
+	nice.bags = bags;
+	nice.root = root;
+
+	return nice;
 }
