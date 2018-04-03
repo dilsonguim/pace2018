@@ -310,6 +310,17 @@ void Nice::chooseRoot(){
 
 niceTW Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1) {
 	int i;
+
+   for (int i = 0; i < isTerminal1.size(); i++) {
+      cout << isTerminal1[i] << ' ';
+   }
+   cout << endl;
+   for (auto& bag : bags1) {
+      cout << "bag =";
+      for (auto& item : bag) cout << ' ' << item;
+      cout << endl;
+   }
+   cout << endl;
 	
 	isTerminal = isTerminal1;
 	bags = bags1;
@@ -322,6 +333,7 @@ niceTW Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1
 	}
         
 	chooseRoot();
+   cout << "root = " << root << endl;
 	regra1();
 	regra2(root,-1);
 	regra3(root,-1);

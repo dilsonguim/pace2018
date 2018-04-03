@@ -56,6 +56,10 @@ void parseTerminals(istream& in, Instance* instance) {
 void parseTreeDecomposition(istream& in, Instance* instance) {
    string skip;
    in >> skip;
+   if (skip == "c") {
+      getline(cin, skip);
+      in >> skip;
+   }
    in >> skip;
 
    int num_bags;

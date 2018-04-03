@@ -148,6 +148,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    map<int, int> new_bag_id;
    vector<vector<int>> bags(1);
    int max_bag_size = 0;
+   cout << "bags_size = " << instance->bags.size() << endl;
    for (int old_bag_id = 0; old_bag_id < instance->bags.size(); old_bag_id++) {
       auto& old_bag = instance->bags[old_bag_id];
       vector<int> new_bag;
