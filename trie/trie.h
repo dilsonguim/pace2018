@@ -1,0 +1,50 @@
+#include <algorithm>
+#include <cstdlib>
+#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <limits>
+#include <list>
+#include <vector>
+#include <map>
+#include <queue>
+#include <set>
+#include <stack>
+#include <string>
+#include <cmath>
+#include <unordered_map>
+#include <memory>
+
+using namespace std;
+
+struct Trie {
+  Trie(long long v) {
+    next = NULL;
+    val = v;
+  }
+
+  Trie() : Trie(123456789) {};
+
+  unordered_map<int, unique_ptr<Trie>> children;
+  
+  void Spawn(int tw);
+
+  //|coloring| at pos=0 is useless!
+  Trie* Query(vector<int>& coloring);
+
+  //|coloring| at pos=0 is useless!
+  Trie* Build(vector<int>& coloring);
+
+  Trie* operator[](int i) {
+    return children.count(i) ? children[i].get() : NULL;
+  }
+
+  Trie* FillNext(Trie* prev);
+
+  Trie* next;
+  vector<int> colors;
+  long long val;
+};
+
+string vec_printer(vector<int>& v);
