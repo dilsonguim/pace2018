@@ -120,6 +120,15 @@ bool parallelEdgeTest(Instance * instance, vector<Edge>& solution) {
    return true;
 }
 
+
+void dfs_tree(Bell& solver, vector<vector<int>>& tree, int a, int p) {
+   for (auto& b : tree[a]) {
+      if (b == p) continue;
+      solver.tree[a].push_back(b);
+      dfs_tree(solver, tree, b, a);
+   }
+}
+
 vector<Edge> reduceAndSolve(Instance* instance) {
    vector<Edge> solution;
 
@@ -173,6 +182,33 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
    Nice nicefier;
    auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
+
+   Bell solver;
+   solver.is_terminal = is_terminal;
+   solver.tree.resize(nice.tree.size()); 
+   dfs_tree(solver, nice.tree, nice.root, -1);
+
+   solver.bags = nice.bags;
+   for (auto& id_edge_pair : instance->graph.edges) {
+      auto& e = id_edge_pair.second;
+      int w = e.weight; 
+
+      int a = new_node_id[e.endpoints[0]];
+      int b = new_node_id[e.endpoints[1]];
+      solver.graph[a].push_back({b, w});
+      solver.graph[b].push_back({a, w});
+   }
+
+   for (auto& bag : solver.bags) {
+      sort(bag.begin(), bag.end());
+   }
+   for (auto& adj : solver.graph) {
+      sort(adj.begin(), adj.end());
+   }
+   solver.dp.resize(solver.bags.size());
+
+   solver.Solve(nice.root);
+
    nicefier.Debug();
    return solution;
 }
