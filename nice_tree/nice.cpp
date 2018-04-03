@@ -2,6 +2,136 @@
 
 using namespace std;
 
+
+bool Nice::isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join){
+	unsigned int i;
+	vector<int> bagVertex = bags[vertex];
+	vector<int> inter;
+	int filhos;
+	int parJoin = -1;
+	bool ret;
+
+
+	if(pai == -1){
+		if(findTerminal(bags[vertex],isTerminal) == -1){
+			cout << "sem terminais na raiz" << endl;
+			return false;
+		}
+	}
+
+	//se eh folha
+	if(tree[vertex].size() == 1){
+		if(bags[vertex].size() != 1){
+			cout << "tamanho da bag na folha errada" << endl;
+			return false;
+		}
+	}
+
+	filhos = 0;
+	//analisar filhos
+	for(i = 0; i < tree[vertex].size();i++){
+		if(tree[vertex][i] != pai){
+			filhos++;
+		}
+	}
+
+	if(filhos == 2){
+		parJoin = 1;
+	}
+	if(filhos == 1){
+		parJoin = 0;
+	}
+	if(filhos > 2){
+		cout << "mais de 2 filhos" << endl;
+		return false;
+	}
+
+
+
+	if(!is_sorted(bagVertex.begin(),bagVertex.end())){
+		cout << "bag nao ordenada" << endl;
+		return false;
+	}
+
+	if(pai != -1){
+		if(join){
+			if(!equal(bagAnterior.begin(),bagAnterior.end(),bagVertex.begin()) || bagAnterior.size() != bagVertex.size()){
+				cout << "bags de join diferentes" << endl;
+				return false;
+			}
+		}else{
+			inter.clear();
+			set_intersection(bagAnterior.begin(),bagAnterior.end(),bagVertex.begin(),bagVertex.end(),inter.begin());
+			if((int)bagAnterior.size() - (int)bagVertex.size() == 1){
+				if(inter.size() != bagVertex.size()){
+					cout << "problema na passagem de uma bag a outra" << endl;
+					return false;
+				}
+			}else if((int)bagAnterior.size() - (int)bagVertex.size() == -1){
+				if(inter.size() != bagAnterior.size()){
+					cout << "problema na passagem de uma bag a outra" << endl;
+					return false;
+				}
+			}else{
+				return false;
+			}
+		}	
+	}
+
+	for(i = 0; i < tree[vertex].size();i++){
+		if(tree[vertex][i] != pai){
+			ret = isNiceAux(tree[vertex][i],vertex,bagVertex,parJoin);
+		}
+		if(ret == false){
+			return false;
+		}
+	}
+	return true;
+}
+
+ bool Nice::isNice(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1){
+ 	tree = tree1;
+ 	bags = bags1;
+ 	isTerminal = isTerminal1;
+ 	root = root1;
+ 	vector<int> bagAux;
+
+ 	if (isNiceAux(root,-1,bagAux,-1)){
+ 		return true;
+ 	}else{
+ 		return false;
+ 	}
+ }
+
+
+// bool Nice::isTD(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1, vector<vector <int>> graph, int n){
+// 	tree = tree1;
+//  	bags = bags1;
+//  	isTerminal = isTerminal1;
+//  	root = root1;
+//  	unsigned int i;
+//  	unsigned int j;
+
+//  	set<int> setU;
+
+//  	for(i = 1;i < bags.size();i++){
+//  		for(j = 0;j < bags[i].size();j++){
+//  			setU.insert(bags[i][j]);
+//  		}
+//  	}
+
+//  	if(setU.size() != n){
+//  		cout << "As bags nao contem todos os vertices de G" << endl;
+//  		return false;
+//  	}
+
+//  	for(){
+
+//  	}
+
+// }
+
+
 void Nice::Debug(){
 	int i;
 	unsigned int j;
@@ -310,17 +440,6 @@ void Nice::chooseRoot(){
 
 niceTW Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1,int tam_bag1) {
 	int i;
-
-   for (int i = 0; i < isTerminal1.size(); i++) {
-      cout << isTerminal1[i] << ' ';
-   }
-   cout << endl;
-   for (auto& bag : bags1) {
-      cout << "bag =";
-      for (auto& item : bag) cout << ' ' << item;
-      cout << endl;
-   }
-   cout << endl;
 	
 	isTerminal = isTerminal1;
 	bags = bags1;

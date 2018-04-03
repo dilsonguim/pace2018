@@ -13,7 +13,12 @@ typedef struct t_nice{
 
 struct Nice {
 
-  
+  bool isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join);
+
+  bool isNice(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1);
+
+  //bool isTD(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1);
+
   void Debug();
 
   void regra1();
