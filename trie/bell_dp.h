@@ -31,7 +31,7 @@ struct Bell {
   long long RootValue(int bag);
     
   vector<vector<pair<int, int>>> graph;
-  vector<int> is_terminal;
+  vector<bool> is_terminal;
   vector<vector<int>> tree;
   vector<vector<int>> bags;
   vector<unique_ptr<Trie>> dp;
