@@ -183,6 +183,16 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    Nice nicefier;
    auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
 
+   cout << "verificando a nice tree" << endl;
+
+   if(nicefier.isNice(nice.tree,nice.bags,is_terminal,nice.root)){
+      cout << "esta nice" << endl;
+   }else{
+      cout << "nao esta nice" << endl;
+   }
+
+   
+
    Bell solver;
    solver.is_terminal = is_terminal;
    solver.tree.resize(nice.tree.size()); 

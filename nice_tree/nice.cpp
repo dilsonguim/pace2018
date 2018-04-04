@@ -10,6 +10,7 @@ bool Nice::isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join){
 	int filhos;
 	int parJoin = -1;
 	bool ret;
+	int maxBag;
 
 
 	if(pai == -1){
@@ -26,7 +27,6 @@ bool Nice::isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join){
 			return false;
 		}
 	}
-
 	filhos = 0;
 	//analisar filhos
 	for(i = 0; i < tree[vertex].size();i++){
@@ -34,7 +34,6 @@ bool Nice::isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join){
 			filhos++;
 		}
 	}
-
 	if(filhos == 2){
 		parJoin = 1;
 	}
@@ -47,12 +46,10 @@ bool Nice::isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join){
 	}
 
 
-
 	if(!is_sorted(bagVertex.begin(),bagVertex.end())){
 		cout << "bag nao ordenada" << endl;
 		return false;
 	}
-
 	if(pai != -1){
 		if(join){
 			if(!equal(bagAnterior.begin(),bagAnterior.end(),bagVertex.begin()) || bagAnterior.size() != bagVertex.size()){
@@ -60,30 +57,35 @@ bool Nice::isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join){
 				return false;
 			}
 		}else{
+			maxBag = max(bagAnterior.size(),bagVertex.size());
+
 			inter.clear();
-			set_intersection(bagAnterior.begin(),bagAnterior.end(),bagVertex.begin(),bagVertex.end(),inter.begin());
+			inter.assign(maxBag,-1);
+			auto it = set_intersection(bagAnterior.begin(),bagAnterior.end(),bagVertex.begin(),bagVertex.end(),inter.begin());
+			inter.resize(it - inter.begin()); 
 			if((int)bagAnterior.size() - (int)bagVertex.size() == 1){
 				if(inter.size() != bagVertex.size()){
-					cout << "problema na passagem de uma bag a outra" << endl;
+					cout << "1 problema na passagem de uma bag a outra" << endl;
 					return false;
 				}
 			}else if((int)bagAnterior.size() - (int)bagVertex.size() == -1){
 				if(inter.size() != bagAnterior.size()){
-					cout << "problema na passagem de uma bag a outra" << endl;
+					cout << "2 problema na passagem de uma bag a outra" << endl;
 					return false;
 				}
 			}else{
+				cout << "3 problema na passagem de uma bag a outra" << endl;
 				return false;
 			}
 		}	
 	}
-
 	for(i = 0; i < tree[vertex].size();i++){
 		if(tree[vertex][i] != pai){
 			ret = isNiceAux(tree[vertex][i],vertex,bagVertex,parJoin);
-		}
-		if(ret == false){
-			return false;
+
+			if(ret == false){
+				return false;
+			}
 		}
 	}
 	return true;
