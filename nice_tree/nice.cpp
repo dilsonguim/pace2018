@@ -103,33 +103,97 @@ bool Nice::isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join){
  	}
  }
 
+void Nice::dfs(int vertex,vector<int> path){
+	unsigned int i;
+	int v;
 
-// bool Nice::isTD(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1, vector<vector <int>> graph, int n){
-// 	tree = tree1;
-//  	bags = bags1;
-//  	isTerminal = isTerminal1;
-//  	root = root1;
-//  	unsigned int i;
-//  	unsigned int j;
+	visited[vertex] = 1;
+	path.push_back(vertex);
+	caminhos[vertex] = path;
 
-//  	set<int> setU;
+	for(i = 0; i < tree[vertex].size();i++){
+		v = tree[vertex][i];
+		if(!visited[v]){
+			dfs(v,path);
+		}
+	}
 
-//  	for(i = 1;i < bags.size();i++){
-//  		for(j = 0;j < bags[i].size();j++){
-//  			setU.insert(bags[i][j]);
-//  		}
-//  	}
+	path.pop_back();
 
-//  	if(setU.size() != n){
-//  		cout << "As bags nao contem todos os vertices de G" << endl;
-//  		return false;
-//  	}
+}
 
-//  	for(){
+bool Nice::isTD(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1, vector<vector <pair <int,int>>> graph){
+	tree = tree1;
+ 	bags = bags1;
+ 	isTerminal = isTerminal1;
+ 	root = root1;
+ 	unsigned int i;
+ 	unsigned int j;
+ 	unsigned int k;
+ 	pair<int,int> edge;
+ 	vector<int> inter;
+ 	vector<int> auxVetor;
+ 	int bagAtual;
+ 	unsigned int n;
 
-//  	}
+ 	n = graph.size() - 1;
 
-// }
+ 	set<int> setU;
+ 	int find;
+
+ 	//verficar se todos os vertices de G estao em alguma bag
+ 	for(i = 1;i < bags.size();i++){
+ 		for(j = 0;j < bags[i].size();j++){
+ 			setU.insert(bags[i][j]);
+ 		}
+ 	}
+
+ 	if(setU.size() != n){
+ 		cout << "As bags nao contem todos os vertices de G" << endl;
+ 		return false;
+ 	}
+
+ 	//verificar se todas as arestas estao nas bags
+ 	for(i = 1; i < graph.size();i++){
+ 		for(j = 0;j < graph[i].size();j++){
+ 			edge = make_pair(i,graph[i][j].first);
+
+ 			find = 0;
+ 			for(k = 1; k < bags.size();k++){
+ 				if(binary_search(bags[k].begin(),bags[k].end(),edge.first) && binary_search(bags[k].begin(),bags[k].end(),edge.second)){
+ 					find = 1;
+ 					break;
+ 				}
+ 			}
+ 			if(!find){
+ 				cout << "Existe aresta de G que nao está em nenhuma bag da TD" << endl;
+ 				return false;
+ 			}
+ 		}
+ 	}
+
+ 	//verificar a propriedade de elementos de G induzirem uma arvore em TD
+ 	//se seja I a intersecao de Xi e Xj, verificar se todos os Xk no caminho entre eles contem I.
+
+ 	visited.assign(bags.size(),0);
+ 	for(i = 1; i < bags.size();i++){
+ 		caminhos.clear();
+ 		caminhos.assign(bags.size(),auxVetor);
+ 		dfs(i,auxVetor);
+ 		for(j = i + 1; j < bags.size();j++){
+ 			set_intersection(bags[i].begin(),bags[i].end(),bags[j].begin(),bags[j].end(),inter.begin());
+ 			for(k = 0;k < caminhos[j].size();k++){
+ 				bagAtual = caminhos[j][k];
+ 				if(!includes(bags[bagAtual].begin(),bags[bagAtual].end(),inter.begin(),inter.end())){
+ 					cout << "erro na estrutura de arvore induzida por vertices de G na TD" << endl;
+ 					return false;
+ 				}
+ 			}
+ 		}
+ 	}
+
+ 	return true;
+}
 
 
 void Nice::Debug(){

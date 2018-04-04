@@ -13,11 +13,13 @@ typedef struct t_nice{
 
 struct Nice {
 
+  void dfs(int vertex,vector<int> path);
+
   bool isNiceAux(int vertex, int pai,vector<int> bagAnterior,int join);
 
   bool isNice(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1);
 
-  //bool isTD(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1);
+  bool isTD(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<bool> isTerminal1, int root1, vector<vector <pair <int,int>>> graph);
 
   void Debug();
 
@@ -47,6 +49,8 @@ struct Nice {
   int root;	//raiz da tree decomposition
   int tam_bag;	//tamanho maximo de uma bag (tw + 1)
   vector<bool> isTerminal;
+  vector<bool> visited;
+  vector<vector<int>> caminhos;
 };
 
 #endif
