@@ -28,7 +28,7 @@ struct Bell {
   void SolveForget(int bag);
   void SolveJoin(int bag);
   void DisclaimDP(int bag);
-  long long RootValue(int bag);
+  Trie* RootSolution(int bag);
     
   vector<vector<pair<int, int>>> graph;
   vector<bool> is_terminal;

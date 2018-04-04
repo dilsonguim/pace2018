@@ -83,30 +83,40 @@ static void InducedNeighbourhood(vector<pair<int, int>>& total, vector<int>& bag
   }
 }
 
+struct ColorCost {
+  ColorCost() {
+    vertex = -1;
+    edge_cost = 123456789;
+    secondary_index = 123456789;
+  }
+  int vertex;
+  int edge_cost;
+  int secondary_index;
+};
+
 static void ColoringCost(vector<pair<int, int>>& neighbourhood, vector<int>& bag_pos,
-                         vector<int>& coloring, unordered_map<int, pair<int,int>>& color_cost) {
+                         vector<int>& coloring, unordered_map<int, ColorCost>& color_cost) {
   int i = 0;
   while(i < neighbourhood.size()) {
     int i_color = coloring[bag_pos[i]+1];
     if(i_color) {
-      if(!color_cost.count(i_color)) {
-        color_cost[i_color].first = neighbourhood[i].second; // edge cost
-        color_cost[i_color].second = bag_pos[i]+1; // secondary index
+      if(color_cost[i_color].edge_cost > neighbourhood[i].second) {
+        color_cost[i_color].vertex = neighbourhood[i].first;
+        color_cost[i_color].edge_cost = neighbourhood[i].second;
       }
-      color_cost[i_color].first = min(color_cost[i_color].first, neighbourhood[i].second);
-      color_cost[i_color].second = min(color_cost[i_color].second, bag_pos[i]+1);
+      color_cost[i_color].secondary_index = min(color_cost[i_color].secondary_index, bag_pos[i]+1);
     }
     i++;  
   }
 }
 
-static void Powerset(Trie* trie, unordered_map<int, pair<int, int>>& color_cost,
-                     unordered_map<int, pair<int, int>>::iterator it_color_cost,
-                     vector<int>& base_coloring, unordered_set<int>& recoloring,
+static void Powerset(Trie* trie, unordered_map<int, ColorCost>& color_cost,
+                     unordered_map<int, ColorCost>::iterator it_color_cost,
+                     Trie* base_solution, unordered_set<int>& recoloring,
                      int min_secondary_index, long long val, long long base_val,
-                     int bag) {
+                     int bag, int v, vector<vector<int>>& edges) {
   if(it_color_cost == color_cost.end()) {
-    vector<int> new_coloring = base_coloring;
+    vector<int> new_coloring = base_solution->colors;
     for(auto& color : new_coloring) {
       color = (recoloring.count(color)) ? min_secondary_index : color;
     }
@@ -120,21 +130,31 @@ static void Powerset(Trie* trie, unordered_map<int, pair<int, int>>& color_cost,
     //cerr << "On introduce bag " << bag << ", received " << vec_printer(base_coloring)
     //     << " with cost " << base_val << ", built " << vec_printer(new_coloring)
     //     << " with new cost " << val << " and prev cost " <<  node->val << endl; 
-    node->val = min(node->val, val);
+    if(node->val > val) {
+      node->val = val;
+      node->edges = base_solution->edges;
+      for(auto& e : edges) {
+        node->edges.push_back(e);
+      }  
+    }
     return;
   }
-  int next_color = it_color_cost->first, next_cost = it_color_cost->second.first,
-      next_secondary_index = it_color_cost->second.second;
+  auto cost = it_color_cost->second;
+  int next_color = it_color_cost->first, next_cost = cost.edge_cost,
+      next_secondary_index = cost.secondary_index;
 
   auto it = it_color_cost;
   it++;
-  Powerset(trie, color_cost, it, base_coloring, recoloring, min_secondary_index, val, base_val, bag);
+  Powerset(trie, color_cost, it, base_solution, recoloring, min_secondary_index,
+           val, base_val, bag, v, edges);
 
   recoloring.insert(next_color);
+  edges.push_back({v, cost.vertex});
   min_secondary_index = min(min_secondary_index, next_secondary_index);
-  Powerset(trie, color_cost, it, base_coloring, recoloring, min_secondary_index,
-           val + next_cost, base_val, bag);
+  Powerset(trie, color_cost, it, base_solution, recoloring, min_secondary_index,
+           val + next_cost, base_val, bag, v, edges);
 
+  edges.pop_back();
   recoloring.erase(next_color);
 }
 
@@ -159,14 +179,20 @@ void Bell::SolveIntroduce(int bag) {
     if(!is_terminal[v]) {
       //cerr << "Default coloring " << vec_printer(coloring) << " with val " << sol->val << endl;
       trie->Build(coloring)->val = sol->val;
+      trie->Query(coloring)->edges = sol->edges;
     }
     coloring[phi_v] = phi_v;
-    unordered_map<int, pair<int, int>> color_cost;
+    unordered_map<int, ColorCost> color_cost;
     ColoringCost(v_neighbourhood, bag_pos, coloring, color_cost);
     auto it_color_cost = color_cost.begin();
     unordered_set<int> recoloring;
     recoloring.insert(phi_v);
-    Powerset(trie, color_cost, it_color_cost, coloring, recoloring, phi_v, sol->val, sol->val, bag);
+    vector<int> prev_coloring = sol->colors;
+    sol->colors = coloring;
+    vector<vector<int>> edges;
+    Powerset(trie, color_cost, it_color_cost, sol, recoloring, phi_v, sol->val,
+             sol->val, bag, v, edges);
+    sol->colors = prev_coloring;
     sol = sol->next;
   }
 }
@@ -217,7 +243,10 @@ void Bell::SolveForget(int bag) {
     if(FixForgetColoring(coloring, phi_v)) {
       //cerr << "Fixed to coloring " << vec_printer(coloring) << endl;
       Trie* node = trie->Build(coloring);
-      node->val = min(node->val, sol->val);
+      if(node->val > sol->val) {
+        node->val = sol->val;
+        node->edges = sol->edges;
+      }
     }
     sol = sol->next;
   }
@@ -287,7 +316,12 @@ void Bell::SolveJoin(int bag) {
       //     << vec_printer(other_sol->colors) << endl;
       if(Merge(sol->colors, other_sol->colors, coloring)) {
         //cerr << "\tSuccesfully built " << vec_printer(coloring) << endl;
-        trie->Build(coloring)->val = sol->val + other_sol->val;
+        Trie* node = trie->Build(coloring);
+        node->val = sol->val + other_sol->val;
+        node->edges = sol->edges;
+        for(auto& e : other_sol->edges) {
+          node->edges.push_back(e);
+        }
       }
       other_sol = other_sol->next;
     }
@@ -313,11 +347,13 @@ bool IsValidRoot(vector<int>& coloring) {
   return cs.size() == 1;
 }
 
-long long Bell::RootValue(int bag) {
+Trie* Bell::RootSolution(int bag) {
   Trie* sol = dp[bag]->next;  
-  long long res = 1234567;
+  Trie* res = NULL;
   while(sol != NULL) {
-    res = (IsValidRoot(sol->colors)) ? min(res, sol->val) : res;
+    if((IsValidRoot(sol->colors) && (res == NULL || res->val > sol->val))) {
+      res = sol;
+    }
     sol = sol->next;
   }
   return res;

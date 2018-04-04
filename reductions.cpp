@@ -184,6 +184,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
 
    Bell solver;
+   solver.graph.resize(n+1);
    solver.is_terminal = is_terminal;
    solver.tree.resize(nice.tree.size()); 
    dfs_tree(solver, nice.tree, nice.root, -1);
@@ -208,6 +209,11 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    solver.dp.resize(solver.bags.size());
 
    solver.Solve(nice.root);
+   Trie* sol = solver.RootSolution(nice.root);
+   cout << "Solution value is " << sol->val << endl;
+   for(auto& e : sol->edges) {
+      cout << e[0] << ", " << e[1] << endl;    
+   }
 
    nicefier.Debug();
    return solution;

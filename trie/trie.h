@@ -44,6 +44,7 @@ struct Trie {
 
   Trie* next;
   vector<int> colors;
+  vector<vector<int>> edges;
   long long val;
 };
 
