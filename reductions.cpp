@@ -1,5 +1,6 @@
 #include "reductions.h"
 #include "trie/brute_force.h"
+#include "nice_tree/draw_nice.h"
 
 
 /*******************************************************************************
@@ -183,6 +184,9 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
    Nice nicefier;
    auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
+   ofstream file("decomposition.dot");
+   Draw(nice.root, nice.tree, nice.bags, file);
+   file.close();
 
    Bell solver;
    solver.graph.resize(n+1);

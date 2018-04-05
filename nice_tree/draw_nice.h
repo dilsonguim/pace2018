@@ -1,5 +1,5 @@
-#ifndef _H_BRUTE_FORCE_H_
-#define _H_BRUTE_FORCE_H_
+#ifndef _H_DRAW_NICE_H_
+#define _H_DRAW_NICE_H_
 
 #include <algorithm>
 #include <cstdlib>
@@ -17,18 +17,11 @@
 #include <string>
 #include <cmath>
 #include <unordered_map>
-#include <unordered_set>
 #include <memory>
-#include "bell_dp.h"
 
 using namespace std;
 
-struct Solution {
-  vector<vector<int>> edges; //(u,v,weight)
-  long long val;
-};
-
-
-Solution* BruteForceSolve(Bell& bell);
+void Draw(int root, vector<vector<int>>& tree, vector<vector<int>>& bags, ostream& out);
 
 #endif
+

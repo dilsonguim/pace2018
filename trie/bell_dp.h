@@ -1,5 +1,5 @@
-#ifndef _H_BELL_DP_H
-#define _H_BELL_DP_H
+#ifndef _H_BELL_DP_H_
+#define _H_BELL_DP_H_
 
 #include <algorithm>
 #include <cstdlib>

@@ -1,5 +1,5 @@
-#ifndef _H_TRIE_H
-#define _H_TRIE_H
+#ifndef _H_TRIE_H_
+#define _H_TRIE_H_
 
 #include <algorithm>
 #include <cstdlib>
