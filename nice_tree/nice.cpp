@@ -182,8 +182,16 @@ bool Nice::isTD(vector<vector <int> > tree1,vector<vector <int> > bags1, vector<
  		caminhos.clear();
  		caminhos.assign(bags.size(),auxVetor);
  		dfs(i,auxVetor);
+		
+		
+		
  		for(j = i + 1; j < bags.size();j++){
- 			set_intersection(bags[i].begin(),bags[i].end(),bags[j].begin(),bags[j].end(),inter.begin());
+			int maxBag = min(bags[i].size(),bags[j].size());	
+			inter.clear();		
+			inter.assign(maxBag,-1);
+ 			auto it = set_intersection(bags[i].begin(),bags[i].end(),bags[j].begin(),bags[j].end(),inter.begin());
+			inter.resize(it - inter.begin());			
+
  			for(k = 0;k < caminhos[j].size();k++){
  				bagAtual = caminhos[j][k];
  				if(!includes(bags[bagAtual].begin(),bags[bagAtual].end(),inter.begin(),inter.end())){
