@@ -1,3 +1,6 @@
+#ifndef _H_TRIE_H
+#define _H_TRIE_H
+
 #include <algorithm>
 #include <cstdlib>
 #include <cstdio>
@@ -44,7 +47,10 @@ struct Trie {
 
   Trie* next;
   vector<int> colors;
+  vector<vector<int>> edges;
   long long val;
 };
 
 string vec_printer(vector<int>& v);
+
+#endif

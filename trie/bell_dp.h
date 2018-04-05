@@ -1,3 +1,6 @@
+#ifndef _H_BELL_DP_H
+#define _H_BELL_DP_H
+
 #include <algorithm>
 #include <cstdlib>
 #include <cstdio>
@@ -18,6 +21,7 @@
 #include <memory>
 #include "trie.h"
 
+using namespace std;
 
 struct Bell {
 
@@ -28,7 +32,7 @@ struct Bell {
   void SolveForget(int bag);
   void SolveJoin(int bag);
   void DisclaimDP(int bag);
-  long long RootValue(int bag);
+  Trie* RootSolution(int bag);
     
   vector<vector<pair<int, int>>> graph;
   vector<bool> is_terminal;
@@ -37,3 +41,4 @@ struct Bell {
   vector<unique_ptr<Trie>> dp;
 };
 
+#endif
