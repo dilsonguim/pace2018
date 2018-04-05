@@ -1,4 +1,5 @@
 #include "reductions.h"
+#include "trie/brute_force.h"
 
 
 /*******************************************************************************
@@ -212,6 +213,12 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    Trie* sol = solver.RootSolution(nice.root);
    cout << "Solution value is " << sol->val << endl;
    for(auto& e : sol->edges) {
+      cout << e[0] << ", " << e[1] << endl;    
+   }
+  
+   unique_ptr<Solution> brute_sol(BruteForceSolve(solver));
+   cout << "Brute force solution value is " << brute_sol->val << endl;
+   for(auto& e : brute_sol->edges) {
       cout << e[0] << ", " << e[1] << endl;    
    }
 

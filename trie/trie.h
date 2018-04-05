@@ -1,3 +1,6 @@
+#ifndef _H_TRIE_H
+#define _H_TRIE_H
+
 #include <algorithm>
 #include <cstdlib>
 #include <cstdio>
@@ -49,3 +52,5 @@ struct Trie {
 };
 
 string vec_printer(vector<int>& v);
+
+#endif

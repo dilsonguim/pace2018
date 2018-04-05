@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include <memory>
 #include "bell_dp.h"
+#include "brute_force.h"
 
 int main() {
   Bell dp;
@@ -109,9 +110,17 @@ int main() {
     dp_real.Solve(r);
     Trie* sol = dp_real.RootSolution(r);
     sols.insert(sol->val);
+    cerr << "Dynamic programming" << endl;
     cerr << sol->val << endl;
     for(auto& e : sol->edges) {
+      sort(e.begin(), e.end());
       cerr << e[0] << ", " << e[1] << endl;      
+    }
+    cerr << "Brute force" << endl;
+    unique_ptr<Solution> bsol(BruteForceSolve(dp_real));
+    cerr << bsol->val << endl;
+    for(auto& e : bsol->edges) {
+      cerr << e[0] << ", " << e[1] << ", " << e[2] << endl;      
     }
   } while(false); //while(next_permutation(itb, itc));
   if(sols.size() > 1) {
