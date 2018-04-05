@@ -188,6 +188,8 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    Draw(nice.root, nice.tree, nice.bags, file);
    file.close();
 
+   
+
    Bell solver;
    solver.graph.resize(n+1);
    solver.is_terminal = is_terminal;
@@ -224,6 +226,25 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    cout << "Brute force solution value is " << brute_sol->val << endl;
    for(auto& e : brute_sol->edges) {
       cout << e[0] << ", " << e[1] << endl;    
+   }
+
+	
+   cout << "verificando se eh tree decomposition" << endl;
+
+   if(nicefier.isTD(nice.tree,nice.bags,is_terminal,nice.root,solver.graph)){
+      cout << "eh tree decompositon" << endl;
+   }else{
+	  cout << "WARNING!!!!!! :X" << endl;
+      cout << "nao eh tree decompositon" << endl;
+   }
+
+	cout << "verificando se tem as propriedades nice" << endl;
+
+   if(nicefier.isNice(nice.tree,nice.bags,is_terminal,nice.root)){
+      cout << "esta nice" << endl;
+   }else{
+	  cout << "WARNING!!!!!! :X" << endl;
+      cout << "nao eh nice decomposition" << endl;
    }
 
    nicefier.Debug();
