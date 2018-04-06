@@ -53,4 +53,6 @@ struct Trie {
 
 string vec_printer(vector<int>& v);
 
+string edge_printer(vector<vector<int>>& v);
+
 #endif

@@ -3,24 +3,24 @@
 
 void Bell::Solve(int bag) {
   if(tree[bag].empty()) {
-    //cerr << "Solving leaf bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+    //cerr << endl << "Solving leaf bag " << bag << ": " << vec_printer(bags[bag]) << endl;
     SolveLeaf(bag);  
   }  
   else {
     Solve(tree[bag][0]);
     if(tree[bag].size() == 1) {
       if(bags[tree[bag][0]].size() < bags[bag].size()) {
-        //cerr << "Solving introduce bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+        //cerr << endl << "Solving introduce bag " << bag << ": " << vec_printer(bags[bag]) << endl;
         SolveIntroduce(bag);  
       }
       else {
-        //cerr << "Solving forget bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+        //cerr << endl << "Solving forget bag " << bag << ": " << vec_printer(bags[bag]) << endl;
         SolveForget(bag);  
       }
     }
     else {
       Solve(tree[bag][1]);
-      //cerr << "Solving join bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+      //cerr << endl << "Solving join bag " << bag << ": " << vec_printer(bags[bag]) << endl;
       SolveJoin(bag);
     }
   }
@@ -64,13 +64,39 @@ static void FixIntroduceColoring(vector<int>& coloring, int phi_v) {
   }
 }
 
+struct ColorCost {
+  ColorCost(int v, int e, int s) {
+    vertex = v;
+    edge_cost = e;
+    secondary_index = s;
+  }
+
+  ColorCost() : ColorCost(-1, 123456789, 123456789) {}
+
+  int vertex;
+  int edge_cost;
+  int secondary_index;
+
+  bool operator<(const ColorCost& c) {
+    return (edge_cost != c.edge_cost) ? edge_cost < c.edge_cost
+                                      : secondary_index < c.secondary_index;  
+  }
+
+  string str() {
+    stringstream s;
+    s << "(" << vertex << ", " << edge_cost << "|" << secondary_index << ")";
+    return s.str();
+  }
+};
+
 static void InducedNeighbourhood(vector<pair<int, int>>& total, vector<int>& bag,
-                                 vector<pair<int, int>>& v_neighbourhood, vector<int>& bag_pos) {
+                                 vector<ColorCost>& v_neighbourhood) {
   int i = 0, j = 0;
   while(i < total.size() && j < bag.size()) {
     if(total[i].first == bag[j]) {
-      v_neighbourhood.push_back(total[i]);
-      bag_pos.push_back(j);
+      // bag[0] is not useless!
+      v_neighbourhood.push_back({total[i].first, total[i].second, j+1});
+      //cerr << "pushed back " << v_neighbourhood.back().str() << endl;
       i++;
       j++;
     } 
@@ -83,28 +109,21 @@ static void InducedNeighbourhood(vector<pair<int, int>>& total, vector<int>& bag
   }
 }
 
-struct ColorCost {
-  ColorCost() {
-    vertex = -1;
-    edge_cost = 123456789;
-    secondary_index = 123456789;
-  }
-  int vertex;
-  int edge_cost;
-  int secondary_index;
-};
-
-static void ColoringCost(vector<pair<int, int>>& neighbourhood, vector<int>& bag_pos,
+static void ColoringCost(vector<ColorCost>& neighbourhood,
                          vector<int>& coloring, unordered_map<int, ColorCost>& color_cost) {
   int i = 0;
   while(i < neighbourhood.size()) {
-    int i_color = coloring[bag_pos[i]+1];
-    if(i_color) {
-      if(color_cost[i_color].edge_cost > neighbourhood[i].second) {
-        color_cost[i_color].vertex = neighbourhood[i].first;
-        color_cost[i_color].edge_cost = neighbourhood[i].second;
+    int i_color = neighbourhood[i].secondary_index;
+    if(i_color && coloring[i_color] == i_color) {
+      auto& c_cost = color_cost[i_color];
+      if(neighbourhood[i] < c_cost) {
+        c_cost.vertex = neighbourhood[i].vertex;
+        c_cost.edge_cost = neighbourhood[i].edge_cost;
       }
-      color_cost[i_color].secondary_index = min(color_cost[i_color].secondary_index, bag_pos[i]+1);
+      c_cost.secondary_index = min(c_cost.secondary_index,
+                                   neighbourhood[i].secondary_index);
+      //cerr << "for color " << i_color << ", min_secondary_index = "
+      //     << c_cost.secondary_index << endl;
     }
     i++;  
   }
@@ -117,6 +136,11 @@ static void Powerset(Trie* trie, unordered_map<int, ColorCost>& color_cost,
                      int bag, int v, vector<vector<int>>& edges) {
   if(it_color_cost == color_cost.end()) {
     vector<int> new_coloring = base_solution->colors;
+    //cerr << "Recoloring:";
+    for(auto& color : recoloring) {
+      //cerr << " " << color << " -> " << min_secondary_index;
+    }
+    //cerr << endl;
     for(auto& color : new_coloring) {
       color = (recoloring.count(color)) ? min_secondary_index : color;
     }
@@ -127,7 +151,7 @@ static void Powerset(Trie* trie, unordered_map<int, ColorCost>& color_cost,
       //cerr << "Building new coloring!" << endl;  
     }
     Trie* node = trie->Build(new_coloring);
-    //cerr << "On introduce bag " << bag << ", received " << vec_printer(base_coloring)
+    //cerr << "On introduce bag " << bag << ", received " << vec_printer(base_solution->colors)
     //     << " with cost " << base_val << ", built " << vec_printer(new_coloring)
     //     << " with new cost " << val << " and prev cost " <<  node->val << endl; 
     if(node->val > val) {
@@ -162,13 +186,13 @@ void Bell::SolveIntroduce(int bag) {
   int child_bag = tree[bag][0];
   int v = find_diff(bags[bag], bags[child_bag]); //extra vertex in |bag|.
   int phi_v = (lower_bound(bags[bag].begin(), bags[bag].end(), v) - bags[bag].begin()) + 1;
+  //cerr << "introduced " << v << " phi_v = " << phi_v << endl;
 
   dp[bag].reset(new Trie());
   Trie* trie = dp[bag].get();
 
-  vector<pair<int, int>> v_neighbourhood;
-  vector<int> bag_pos;
-  InducedNeighbourhood(graph[v], bags[bag], v_neighbourhood, bag_pos);
+  vector<ColorCost> v_neighbourhood;
+  InducedNeighbourhood(graph[v], bags[bag], v_neighbourhood);
 
   Trie* sol = dp[child_bag].get();
   sol = sol->next;
@@ -183,7 +207,7 @@ void Bell::SolveIntroduce(int bag) {
     }
     coloring[phi_v] = phi_v;
     unordered_map<int, ColorCost> color_cost;
-    ColoringCost(v_neighbourhood, bag_pos, coloring, color_cost);
+    ColoringCost(v_neighbourhood, coloring, color_cost);
     auto it_color_cost = color_cost.begin();
     unordered_set<int> recoloring;
     recoloring.insert(phi_v);
@@ -229,10 +253,6 @@ void Bell::SolveForget(int bag) {
 
   dp[bag].reset(new Trie());
   Trie* trie = dp[bag].get();
-
-  vector<pair<int, int>> v_neighbourhood;
-  vector<int> bag_pos;
-  InducedNeighbourhood(graph[v], bags[bag], v_neighbourhood, bag_pos);
 
   Trie* sol = dp[tree[bag][0]].get();
   sol = sol->next;
@@ -334,26 +354,37 @@ void Bell::DisclaimDP(int bag) {
   Trie* sol = dp[bag]->next;
   int i = 0;
   while(sol != NULL && (i++ < 5)) {
-    //cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val << endl;
+    //cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val
+    //     << " | edges: " << edge_printer(sol->edges) << endl;
     sol = sol->next;
   }
 }
 
-bool IsValidRoot(vector<int>& coloring) {
+static bool IsValidRoot(vector<int>& coloring) {
   unordered_set<int> cs;
   for(int i = 1; i < coloring.size(); i++) {
-    cs.insert(coloring[i]);
+    if(coloring[i]) {
+      cs.insert(coloring[i]);
+    }
+    if(cs.size() > 1) {
+      return false;  
+    }
   }
-  return cs.size() == 1;
+  //cerr << "cs of " << vec_printer(coloring) << " is " << cs.size()
+  //     << " | Is valid? Answer: " << (cs.size() == 1) << endl;
+  return true;
 }
 
 Trie* Bell::RootSolution(int bag) {
   Trie* sol = dp[bag]->next;  
   Trie* res = NULL;
   while(sol != NULL) {
-    if((IsValidRoot(sol->colors) && (res == NULL || res->val > sol->val))) {
+    if(IsValidRoot(sol->colors) && (res == NULL || res->val > sol->val)) {
       res = sol;
     }
+    //cerr << "current best solution is: " << vec_printer(sol->colors) << ", val = " << sol->val
+    //     << " | edges: " << edge_printer(sol->edges) << endl;
+
     sol = sol->next;
   }
   return res;

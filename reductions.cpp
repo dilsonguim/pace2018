@@ -134,9 +134,9 @@ void dfs_tree(Bell& solver, vector<vector<int>>& tree, int a, int p) {
 vector<Edge> reduceAndSolve(Instance* instance) {
    vector<Edge> solution;
 
-   if (degreeOneTest(instance, solution)) return solution;
+   //if (degreeOneTest(instance, solution)) return solution;
    //if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
-   if (parallelEdgeTest(instance, solution)) return solution;
+   //if (parallelEdgeTest(instance, solution)) return solution;
 
 
    cout << "Irreducible n = " << instance->graph.nodes.size() <<
@@ -184,9 +184,6 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
    Nice nicefier;
    auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
-   ofstream file("decomposition.dot");
-   Draw(nice.root, nice.tree, nice.bags, file);
-   file.close();
 
    
 
@@ -228,6 +225,19 @@ vector<Edge> reduceAndSolve(Instance* instance) {
       cout << e[0] << ", " << e[1] << endl;    
    }
 
+   {
+     ofstream file("decomposition.dot");
+     vector<bool> is_term(solver.graph.size());
+     is_term[nice.root] = 1;
+     Draw(nice.root, nice.tree, nice.bags, is_term, file);
+     file.close();
+   }
+
+   {
+     ofstream file("graph.dot");
+     DrawGraph(solver.graph, solver.is_terminal, file);
+     file.close();
+   }
 	
    cout << "verificando se eh tree decomposition" << endl;
 

@@ -8,6 +8,14 @@ string vec_printer(vector<int>& v) {
   return s.str();
 }
 
+string edge_printer(vector<vector<int>>& v){
+  stringstream s;
+  for(auto& x : v) {
+    s << " (" << vec_printer(x) << ")";  
+  }
+  return s.str();
+}
+
 static bool IsZero(vector<int>& coloring) {
   for(auto& c : coloring) {
     if(c) {
