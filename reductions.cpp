@@ -139,7 +139,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    //if (parallelEdgeTest(instance, solution)) return solution;
 
 
-   cout << "Irreducible n = " << instance->graph.nodes.size() <<
+   cerr << "Irreducible n = " << instance->graph.nodes.size() <<
         " m = " << instance->graph.edges.size() << endl;
 
    auto& g = instance->graph;
@@ -159,7 +159,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    map<int, int> new_bag_id;
    vector<vector<int>> bags(1);
    int max_bag_size = 0;
-   cout << "bags_size = " << instance->bags.size() << endl;
+   cerr << "bags_size = " << instance->bags.size() << endl;
    for (int old_bag_id = 0; old_bag_id < instance->bags.size(); old_bag_id++) {
       auto& old_bag = instance->bags[old_bag_id];
       vector<int> new_bag;
@@ -214,22 +214,46 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
    solver.Solve(nice.root);
    Trie* sol = solver.RootSolution(nice.root);
-   cout << "Solution value is " << sol->val << endl;
+   bool debug = false;
+   if(!debug) {
+     cout << "VALUE " << sol->val << endl;
+     for(auto& e : sol->edges) {
+        cout << e[0] << " " << e[1] << endl; 
+     }
+     return solution;
+   }
+
+   cerr << "Solution value is " << sol->val << endl;
    for(auto& e : sol->edges) {
-      cout << e[0] << ", " << e[1] << endl;    
+      cerr << e[0] << ", " << e[1] << endl;    
    }
   
-   unique_ptr<Solution> brute_sol(BruteForceSolve(solver));
-   cout << "Brute force solution value is " << brute_sol->val << endl;
-   for(auto& e : brute_sol->edges) {
-      cout << e[0] << ", " << e[1] << endl;    
-   }
+//   unique_ptr<Solution> brute_sol(BruteForceSolve(solver));
+//   cerr << "Brute force solution value is " << brute_sol->val << endl;
+//   for(auto& e : brute_sol->edges) {
+//      cerr << e[0] << ", " << e[1] << endl;    
+//   }
 
    {
      ofstream file("decomposition.dot");
-     vector<bool> is_term(solver.graph.size());
+     vector<bool> is_term(solver.tree.size());
      is_term[nice.root] = 1;
      Draw(nice.root, nice.tree, nice.bags, is_term, file);
+     file.close();
+   }
+
+   {
+     ofstream file("solution.dot");
+     vector<vector<pair<int,int>>> sol_graph(solver.graph.size());
+     for(auto& e : sol->edges) {
+       int w = 0;
+       for(auto& x : solver.graph[e[0]]) {
+         w = (x.first == e[1]) ? x.second : w;  
+       }
+       sol_graph[e[0]].push_back({e[1], w});
+       sol_graph[e[1]].push_back({e[0], w});
+     }
+     DrawGraph(sol_graph, solver.is_terminal, file);
      file.close();
    }
 
@@ -239,22 +263,22 @@ vector<Edge> reduceAndSolve(Instance* instance) {
      file.close();
    }
 	
-   cout << "verificando se eh tree decomposition" << endl;
+   cerr << "verificando se eh tree decomposition" << endl;
 
    if(nicefier.isTD(nice.tree,nice.bags,is_terminal,nice.root,solver.graph)){
-      cout << "eh tree decompositon" << endl;
+      cerr << "eh tree decompositon" << endl;
    }else{
-	  cout << "WARNING!!!!!! :X" << endl;
-      cout << "nao eh tree decompositon" << endl;
+	  cerr << "WARNING!!!!!! :X" << endl;
+      cerr << "nao eh tree decompositon" << endl;
    }
 
-	cout << "verificando se tem as propriedades nice" << endl;
+	cerr << "verificando se tem as propriedades nice" << endl;
 
    if(nicefier.isNice(nice.tree,nice.bags,is_terminal,nice.root)){
-      cout << "esta nice" << endl;
+      cerr << "esta nice" << endl;
    }else{
-	  cout << "WARNING!!!!!! :X" << endl;
-      cout << "nao eh nice decomposition" << endl;
+	  cerr << "WARNING!!!!!! :X" << endl;
+      cerr << "nao eh nice decomposition" << endl;
    }
 
    nicefier.Debug();

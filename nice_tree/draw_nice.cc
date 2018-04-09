@@ -27,16 +27,30 @@ void Draw(int root, vector<vector<int>>& tree, vector<vector<int>>& bags,
   out << "}";
 }
 
-void DrawGraph(vector<vector<pair<int, int>>>& graph, vector<bool>& is_terminal, ostream& out) {
-  vector<vector<int>> tree(graph.size());
-  vector<vector<int>> bags(graph.size());
-  for(int i = 1; i < graph.size(); i++) {
-    bags[i].push_back(i);
-    for(auto& x : graph[i]) {
-      tree[i].push_back(x.first);  
-    }
+static void InnerDrawGraph(int u, set<int>& parents, vector<vector<pair<int, int>>>& graph,
+                      vector<vector<int>>& bags, vector<bool>& is_terminal, ostream& out) {
+  parents.insert(u);
+  out << "\t" << u;
+  if(is_terminal[u]) {
+    out << " [color=red";  
+    out << "]" << ";";
   }
-  Draw(1, tree, bags, is_terminal, out);
+  cout << endl;
+  for(auto& c : graph[u]) {
+    if(u < c.first && graph[c.first].size()) {
+      out << "\t" << u << " -- " << c.first << " [label=\"" << c.second << "\"];" << endl;
+    }
+    if(!parents.count(c.first) && graph[c.first].size()) {
+      InnerDrawGraph(c.first, parents, graph, bags, is_terminal, out);
+    }  
+  }
+} 
+void DrawGraph(vector<vector<pair<int, int>>>& graph, vector<bool>& is_terminal, ostream& out) {
+  out << "graph {" << endl;
+  set<int> parents;
+  vector<vector<int>> bags(graph.size());
+  InnerDrawGraph(1, parents, graph, bags, is_terminal, out);
+  out << "}";
 }
 
 
