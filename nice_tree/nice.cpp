@@ -526,7 +526,6 @@ niceTW Nice::getNiceTree(vector<vector <int> > tree1,vector<vector <int> > bags1
 	}
         
 	chooseRoot();
-   cout << "root = " << root << endl;
 	regra1();
 	regra2(root,-1);
 	regra3(root,-1);

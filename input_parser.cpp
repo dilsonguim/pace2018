@@ -53,9 +53,14 @@ void parseTerminals(istream& in, Instance* instance) {
    }
 };
 
-void parseTreeDecomposition(istream& in, Instance* instance) {
+void parseTreeDecomposition(istream& in, Instance* instance, string x) {
    string skip;
-   in >> skip;
+   if (x == "") {
+      in >> skip;
+   } else {
+      skip = x;
+   }
+
    if (skip == "c") {
       getline(cin, skip);
       in >> skip;
@@ -92,7 +97,8 @@ void parseTreeDecomposition(istream& in, Instance* instance) {
       instance->tree[a].push_back(b);
       instance->tree[b].push_back(a);
    }
-   in >> skip;
+
+   if (x == "") in >> skip;
 };
 
 
@@ -113,16 +119,18 @@ Instance* parseInput(istream& in) {
             parseTerminals(in, instance);
          } else if(type == "Tree") {
             in >> type;
-            parseTreeDecomposition(in, instance);
+            parseTreeDecomposition(in, instance, "");
          } else {
-            cerr << "Input parsing failed!" << endl;
+            cerr << "Input parsing failed! type2: " << type << endl;
             exit(EXIT_FAILURE);
          }
 
       } else if(token == "EOF") {
          break;
+      } else if (token == "c" or token == "s") {
+         parseTreeDecomposition(in, instance, token);
       } else {
-         cerr << "Input parsing failed!" << endl;
+         cerr << "Input parsing failed! type: " << token << endl;
          exit(EXIT_FAILURE);
       }
    }

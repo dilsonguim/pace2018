@@ -23,6 +23,7 @@ bool degreeOneTest(Instance* instance, vector<Edge>& solution) {
    for (auto& id_node_pair : g.nodes) {
       auto& node = id_node_pair.second;
       if (node.edges.size() != 1) continue;
+      cerr << "deg 1: " << node.id << endl;
 
       Edge e = g.removeEdge(*node.edges.begin());
       int v = g.neighbour(node.id, e);
@@ -123,7 +124,7 @@ bool parallelEdgeTest(Instance * instance, vector<Edge>& solution) {
 }
 
 
-void dfs_tree(Bell& solver, vector<vector<int>>& tree, int a, int p) {
+static void dfs_tree(Bell& solver, vector<vector<int>>& tree, int a, int p) {
    for (auto& b : tree[a]) {
       if (b == p) continue;
       solver.tree[a].push_back(b);
@@ -139,8 +140,8 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    //if (parallelEdgeTest(instance, solution)) return solution;
 
 
-   cerr << "Irreducible n = " << instance->graph.nodes.size() <<
-        " m = " << instance->graph.edges.size() << endl;
+   //cerr << "Irreducible n = " << instance->graph.nodes.size() <<
+   //     " m = " << instance->graph.edges.size() << endl;
 
    auto& g = instance->graph;
    int n = 0;
@@ -152,6 +153,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    for (auto& id_node_pair : g.nodes) {
       auto& node = id_node_pair.second;
       n++;
+      //cerr << "node.id: " << node.id << ", n: " << n << endl;
       new_node_id[node.id] = n;
       is_terminal.push_back(node.terminal);
    }
@@ -159,7 +161,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    map<int, int> new_bag_id;
    vector<vector<int>> bags(1);
    int max_bag_size = 0;
-   cerr << "bags_size = " << instance->bags.size() << endl;
+   //cerr << "bags_size = " << instance->bags.size() << endl;
    for (int old_bag_id = 0; old_bag_id < instance->bags.size(); old_bag_id++) {
       auto& old_bag = instance->bags[old_bag_id];
       vector<int> new_bag;
@@ -184,6 +186,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
    Nice nicefier;
    auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
+   cerr << "Nice decomposition has " << nice.tree.size() << " bags" << endl;
 
    
 
@@ -212,8 +215,43 @@ vector<Edge> reduceAndSolve(Instance* instance) {
    }
    solver.dp.resize(solver.bags.size());
 
-   solver.Solve(nice.root);
+  cerr << "Solving a dp on a tree decomposition with " << solver.tree.size() << " bags" << endl;
+   if(!solver.Solve(nice.root)) {
+       cerr << "Existem terminais em mais de uma componente conexa" << endl;
+   }
    Trie* sol = solver.RootSolution(nice.root);
+
+   bool file_print = true;
+   if(file_print) {
+     {
+       ofstream file("decomposition.dot");
+       vector<bool> is_term(solver.tree.size());
+       is_term[nice.root] = 1;
+       Draw(nice.root, nice.tree, nice.bags, is_term, file);
+       file.close();
+     }
+
+     if(false) {
+       ofstream file("solution.dot");
+       vector<vector<pair<int,int>>> sol_graph(solver.graph.size());
+       for(auto& e : sol->edges) {
+         int w = 0;
+         for(auto& x : solver.graph[e[0]]) {
+           w = (x.first == e[1]) ? x.second : w;  
+         }
+         sol_graph[e[0]].push_back({e[1], w});
+         sol_graph[e[1]].push_back({e[0], w});
+       }
+       DrawGraph(sol_graph, solver.is_terminal, file);
+       file.close();
+     }
+
+     {
+       ofstream file("graph.dot");
+       DrawGraph(solver.graph, solver.is_terminal, file);
+       file.close();
+     }
+   }
    bool debug = false;
    if(!debug) {
      cout << "VALUE " << sol->val << endl;
@@ -228,60 +266,33 @@ vector<Edge> reduceAndSolve(Instance* instance) {
       cerr << e[0] << ", " << e[1] << endl;    
    }
   
-//   unique_ptr<Solution> brute_sol(BruteForceSolve(solver));
-//   cerr << "Brute force solution value is " << brute_sol->val << endl;
-//   for(auto& e : brute_sol->edges) {
-//      cerr << e[0] << ", " << e[1] << endl;    
-//   }
-
-   {
-     ofstream file("decomposition.dot");
-     vector<bool> is_term(solver.tree.size());
-     is_term[nice.root] = 1;
-     Draw(nice.root, nice.tree, nice.bags, is_term, file);
-     file.close();
-   }
-
-   {
-     ofstream file("solution.dot");
-     vector<vector<pair<int,int>>> sol_graph(solver.graph.size());
-     for(auto& e : sol->edges) {
-       int w = 0;
-       for(auto& x : solver.graph[e[0]]) {
-         w = (x.first == e[1]) ? x.second : w;  
-       }
-       sol_graph[e[0]].push_back({e[1], w});
-       sol_graph[e[1]].push_back({e[0], w});
-     }
-     DrawGraph(sol_graph, solver.is_terminal, file);
-     file.close();
-   }
-
-   {
-     ofstream file("graph.dot");
-     DrawGraph(solver.graph, solver.is_terminal, file);
-     file.close();
+   unique_ptr<Solution> brute_sol(BruteForceSolve(solver));
+   cerr << "Brute force solution value is " << brute_sol->val << endl;
+   for(auto& e : brute_sol->edges) {
+      cerr << e[0] << ", " << e[1] << endl;    
    }
 	
-   cerr << "verificando se eh tree decomposition" << endl;
+   if(false) {
+     cerr << "verificando se eh tree decomposition" << endl;
 
-   if(nicefier.isTD(nice.tree,nice.bags,is_terminal,nice.root,solver.graph)){
-      cerr << "eh tree decompositon" << endl;
-   }else{
-	  cerr << "WARNING!!!!!! :X" << endl;
-      cerr << "nao eh tree decompositon" << endl;
+     if(nicefier.isTD(nice.tree,nice.bags,is_terminal,nice.root,solver.graph)){
+        cerr << "eh tree decompositon" << endl;
+     }else{
+      cerr << "WARNING!!!!!! :X" << endl;
+        cerr << "nao eh tree decompositon" << endl;
+     }
+
+    cerr << "verificando se tem as propriedades nice" << endl;
+
+     if(nicefier.isNice(nice.tree,nice.bags,is_terminal,nice.root)){
+        cerr << "esta nice" << endl;
+     }else{
+      cerr << "WARNING!!!!!! :X" << endl;
+        cerr << "nao eh nice decomposition" << endl;
+     }
+
+     nicefier.Debug();
    }
-
-	cerr << "verificando se tem as propriedades nice" << endl;
-
-   if(nicefier.isNice(nice.tree,nice.bags,is_terminal,nice.root)){
-      cerr << "esta nice" << endl;
-   }else{
-	  cerr << "WARNING!!!!!! :X" << endl;
-      cerr << "nao eh nice decomposition" << endl;
-   }
-
-   nicefier.Debug();
    return solution;
 }
 

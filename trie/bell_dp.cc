@@ -1,13 +1,15 @@
 #include "bell_dp.h"
 #include "dsu.h"
 
-void Bell::Solve(int bag) {
+bool Bell::Solve(int bag) {
   if(tree[bag].empty()) {
     //cerr << endl << "Solving leaf bag " << bag << ": " << vec_printer(bags[bag]) << endl;
     SolveLeaf(bag);  
   }  
   else {
-    Solve(tree[bag][0]);
+    if(!Solve(tree[bag][0])) {
+      return false;  
+    }
     if(tree[bag].size() == 1) {
       if(bags[tree[bag][0]].size() < bags[bag].size()) {
         //cerr << endl << "Solving introduce bag " << bag << ": " << vec_printer(bags[bag]) << endl;
@@ -18,14 +20,21 @@ void Bell::Solve(int bag) {
         SolveForget(bag);  
       }
     }
-    else {
-      Solve(tree[bag][1]);
+    else { 
+      if(!Solve(tree[bag][1])) {
+        return false;  
+      }
       //cerr << endl << "Solving join bag " << bag << ": " << vec_printer(bags[bag]) << endl;
       SolveJoin(bag);
     }
   }
-  dp[bag].get()->FillNext(dp[bag].get());
-  DisclaimDP(bag);
+  //cerr << "solved bag: " << bag << " " << vec_printer(bags[bag]) << endl;
+  if(dp[bag]->children.size()) {
+    dp[bag]->FillNext(dp[bag].get());
+    return true;
+    //DisclaimDP(bag);
+  }
+  return false;  
 }
 
 void Bell::SolveLeaf(int bag) {
@@ -350,12 +359,12 @@ void Bell::SolveJoin(int bag) {
 }
 
 void Bell::DisclaimDP(int bag) {
-  //cerr << "Disclaiming DP for bag " << bag << endl;
+  cerr << "Disclaiming DP for bag " << bag << endl;
   Trie* sol = dp[bag]->next;
   int i = 0;
   while(sol != NULL && (i++ < 5)) {
-    //cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val
-    //     << " | edges: " << edge_printer(sol->edges) << endl;
+    cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val
+         << " | edges: " << edge_printer(sol->edges) << endl;
     sol = sol->next;
   }
 }

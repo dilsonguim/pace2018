@@ -1,0 +1,46 @@
+SECTION Graph
+Nodes 10
+Edges 35
+E 1 5 96
+E 1 7 12
+E 1 8 73
+E 1 9 21
+E 1 10 85
+E 2 3 31
+E 2 4 53
+E 2 5 74
+E 2 6 69
+E 2 7 6
+E 2 8 75
+E 2 10 55
+E 3 4 97
+E 3 6 44
+E 3 7 38
+E 3 8 46
+E 3 10 9
+E 4 5 26
+E 4 6 59
+E 4 7 75
+E 4 8 74
+E 4 9 36
+E 4 10 0
+E 5 7 50
+E 5 8 29
+E 5 9 39
+E 6 8 40
+E 6 9 83
+E 6 10 47
+E 7 8 66
+E 7 9 11
+E 7 10 9
+E 8 9 49
+E 8 10 90
+E 9 10 71
+END
+SECTION Terminals
+Terminals 4
+T 4
+T 5
+T 6
+T 7
+END

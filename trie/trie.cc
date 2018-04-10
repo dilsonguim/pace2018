@@ -48,7 +48,7 @@ void Trie::Spawn(int tw) {
 
 
 Trie* Trie::Build(vector<int>& coloring) {
-  int i = 1;
+  int i = 0;
   Trie* node = this;
   while(i < coloring.size()) {
     if(!node->children.count(coloring[i])) {
@@ -63,7 +63,7 @@ Trie* Trie::Build(vector<int>& coloring) {
 
 
 Trie* Trie::Query(vector<int>& coloring) {
-  int i = 1;
+  int i = 0;
   Trie* node = this;
   while(i < coloring.size() && node != NULL) {
     node = (*node)[coloring[i]];

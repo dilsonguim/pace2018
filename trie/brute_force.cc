@@ -1,22 +1,6 @@
 #include "brute_force.h"
 #include "dsu.h"
 
-static void Powerset(int i, int n, vector<int>& curr, vector<bool>& is_terminal,
-             vector<vector<int>>& powerset) {
-  if(i == n) {
-    if(curr.size()) {
-      powerset.push_back(curr);
-    }
-    return;
-  }
-  if(!is_terminal[i]) {
-    Powerset(i+1, n, curr, is_terminal, powerset);
-  }
-  curr.push_back(i);
-  Powerset(i+1, n, curr, is_terminal,  powerset);
-  curr.pop_back();
-}
-
 Solution* Kruskal(int n, vector<int>& subset, vector<pair<int, pair<int, int>>>& edges) {
   Solution* sol = new Solution();
   DSU dsu(n);
@@ -38,6 +22,30 @@ Solution* Kruskal(int n, vector<int>& subset, vector<pair<int, pair<int, int>>>&
   return sol;
 }
 
+static void Powerset(int i, int n, vector<int>& curr, vector<bool>& is_terminal,
+                     unique_ptr<Solution>& opt, vector<pair<int, pair<int, int>>>& edges) {
+  static long long abcd = 0;
+  if(i == n) {
+    abcd++;
+    if((abcd % 10000) == 1) {
+      cerr << "\t\t\t\t\t\r" << abcd;
+    }
+    Solution* next = Kruskal(n, curr, edges);
+    if(next != NULL) {
+      if(opt == NULL || opt->val > next->val) {
+        opt.reset(next);
+      }
+    }
+    return;
+  }
+  if(!is_terminal[i]) {
+    Powerset(i+1, n, curr, is_terminal, opt, edges);
+  }
+  curr.push_back(i);
+  Powerset(i+1, n, curr, is_terminal, opt, edges);
+  curr.pop_back();
+}
+
 Solution* BruteForceSolve(Bell& bell) {
   auto& graph = bell.graph;
   auto& is_terminal = bell.is_terminal;
@@ -54,17 +62,8 @@ Solution* BruteForceSolve(Bell& bell) {
     i++;  
   }
   sort(edges.begin(), edges.end());
-  vector<vector<int>> powerset;
   vector<int> curr;
-  Powerset(1, graph.size(), curr, is_terminal, powerset);
   unique_ptr<Solution> opt;
-  for(auto& s : powerset) {
-    Solution* next = Kruskal(graph.size(), s, edges);
-    if(next != NULL) {
-      if(opt == NULL || opt->val > next->val) {
-        opt.reset(next);
-      }
-    }
-  }
+  Powerset(1, graph.size(), curr, is_terminal, opt, edges);
   return opt.release();
 }

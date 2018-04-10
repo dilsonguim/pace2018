@@ -25,7 +25,7 @@ using namespace std;
 
 struct Bell {
 
-  void Solve(int bag);
+  bool Solve(int bag);
 
   void SolveLeaf(int bag);
   void SolveIntroduce(int bag);
