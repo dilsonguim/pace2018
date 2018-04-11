@@ -11,7 +11,7 @@ static void InnerDraw(int u, set<int>& parents, vector<vector<int>>& tree,
   }
   out << "]" << ";" << endl;
   for (auto& c : tree[u]) {
-    out << "\t" << u << " - " << c << ";" << endl;
+    out << "\t" << u << " -- " << c << ";" << endl;
     if (!parents.count(c)) {
       InnerDraw(c, parents, tree, bags, is_terminal, out);
     }
