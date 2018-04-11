@@ -191,7 +191,6 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
   Nice nicefier;
   auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
-  cerr << "Nice decomposition has " << nice.tree.size() << " bags" << endl;
 
   Bell solver;
   solver.graph.resize(n + 1);
@@ -255,7 +254,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
       file.close();
     }
   }
-  bool debug = true;
+  bool debug = false;
   if (!debug) {
     cout << "VALUE " << sol->val << endl;
     for (auto& e : sol->edges) {
@@ -274,6 +273,22 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   for (auto& e : brute_sol->edges) {
     cerr << e[0] << " " << e[1] << endl;
   }
+
+  if (true) {
+    ofstream file("brute_solution.dot");
+    vector<vector<pair<int, int>>> sol_graph(solver.graph.size());
+    for (auto& e : brute_sol->edges) {
+      int w = 0;
+      for (auto& x : solver.graph[e[0]]) {
+        w = (x.first == e[1]) ? x.second : w;
+      }
+      sol_graph[e[0]].push_back({ e[1], w });
+      sol_graph[e[1]].push_back({ e[0], w });
+    }
+    DrawGraph(sol_graph, solver.is_terminal, file);
+    file.close();
+  }
+
 
   if (false) {
     cerr << "verificando se eh tree decomposition" << endl;
