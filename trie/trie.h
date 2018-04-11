@@ -18,6 +18,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <memory>
+#include <limits>
 
 using namespace std;
 
@@ -27,7 +28,7 @@ struct Trie {
     val = v;
   }
 
-  Trie() : Trie(123456789) {};
+  Trie() : Trie(std::numeric_limits<long long>::max()) {};
 
   unordered_map<int, unique_ptr<Trie>> children;
   

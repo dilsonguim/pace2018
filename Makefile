@@ -1,4 +1,7 @@
-CFLAGS=-O3 -std=c++11
+CFLAGS=-O3 -std=c++11 -Wall
+
+all: dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o
+	g++ dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o test_reductions.cpp -o solution $(CFLAGS)
 
 dsu.o: trie/dsu.h trie/dsu.cc
 	g++ -c trie/dsu.cc -o dsu.o $(CFLAGS)
@@ -26,6 +29,3 @@ input_parser.o: input_parser.h input_parser.cpp
 
 reductions.o: reductions.h reductions.cpp
 	g++ -c reductions.cpp -o reductions.o $(CFLAGS)
-
-all: dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o
-	g++ dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o test_reductions.cpp -o solution $(CFLAGS)

@@ -74,6 +74,7 @@ Trie* Trie::Query(vector<int>& coloring) {
 
 Trie* Trie::FillNext(Trie* prev) {
   if(children.empty()) {
+    cerr << "Found coloring " << vec_printer(this->colors) << endl;
     prev->next = this;  
     return this;
   }

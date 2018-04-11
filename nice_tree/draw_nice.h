@@ -21,7 +21,7 @@
 
 using namespace std;
 
-void Draw(int root, vector<vector<int>>& tree, vector<vector<int>>& bags,
+void Draw(vector<vector<int>>& tree, vector<vector<int>>& bags,
           vector<bool>& is_terminal, ostream& out);
 
 void DrawGraph(vector<vector<pair<int, int>>>& graph,

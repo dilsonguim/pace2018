@@ -218,25 +218,9 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   }
   solver.dp.resize(solver.bags.size());
 
-  cerr << "Solving a dp on a tree decomposition with " << solver.tree.size()
-       << " bags" << endl;
   Trie* sol = NULL;
   if (!solver.Solve(nice.root)) {
     cerr << "Existem terminais em mais de uma componente conexa" << endl;
-    int abcd = 0;
-
-    for(int i = 1; i < tree.size(); i++) {
-      abcd += tree[i].size();
-      set<pair<int, int>> stupid;
-      for(auto& v : tree[i]) {
-        if(stupid.count({i,v})) {
-          cerr << "Deu mto ruim" << endl;
-        }
-        stupid.insert({i,v});
-        stupid.insert({v,i});
-      }
-    }
-    cerr << "Essa arvore tem " << abcd << " arestas" << endl;
   }
   else {
     sol = solver.RootSolution(nice.root);
@@ -246,13 +230,11 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   if (file_print) {
     {
       ofstream file("decomposition.dot");
-      vector<bool> is_term(solver.tree.size());
-      is_term[nice.root] = 1;
-      Draw(nice.root, nice.tree, nice.bags, is_term, file);
+      Draw(solver.tree, solver.bags, solver.is_terminal, file);
       file.close();
     }
 
-    if (false) {
+    if (true) {
       ofstream file("solution.dot");
       vector<vector<pair<int, int>>> sol_graph(solver.graph.size());
       for (auto& e : sol->edges) {
@@ -273,7 +255,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
       file.close();
     }
   }
-  bool debug = false;
+  bool debug = true;
   if (!debug) {
     cout << "VALUE " << sol->val << endl;
     for (auto& e : sol->edges) {
@@ -284,13 +266,13 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
   cerr << "Solution value is " << sol->val << endl;
   for (auto& e : sol->edges) {
-    cerr << e[0] << ", " << e[1] << endl;
+    cerr << e[0] << " " << e[1] << endl;
   }
 
   unique_ptr<Solution> brute_sol(BruteForceSolve(solver));
   cerr << "Brute force solution value is " << brute_sol->val << endl;
   for (auto& e : brute_sol->edges) {
-    cerr << e[0] << ", " << e[1] << endl;
+    cerr << e[0] << " " << e[1] << endl;
   }
 
   if (false) {

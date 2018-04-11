@@ -27,9 +27,6 @@ static void Powerset(int i, int n, vector<int>& curr, vector<bool>& is_terminal,
   static long long abcd = 0;
   if(i == n) {
     abcd++;
-    if((abcd % 10000) == 1) {
-      cerr << "\t\t\t\t\t\r" << abcd;
-    }
     Solution* next = Kruskal(n, curr, edges);
     if(next != NULL) {
       if(opt == NULL || opt->val > next->val) {
