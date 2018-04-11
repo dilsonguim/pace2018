@@ -27,8 +27,11 @@ bool Bell::Solve(int bag) {
   }
   if (dp[bag]->children.size()) {
     dp[bag]->FillNext(dp[bag].get());
-    DisclaimDP(bag);
     return true;
+    DisclaimDP(bag);
+  }
+  for(auto& c : tree[bag]) {
+    dp[c].reset(NULL);  
   }
   //cerr << "deu pau na bag: " << bag << endl;
   return false;

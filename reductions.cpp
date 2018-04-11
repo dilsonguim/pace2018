@@ -225,7 +225,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
     sol = solver.RootSolution(nice.root);
   }
 
-  bool file_print = true;
+  bool file_print = false;
   if (file_print) {
     {
       ofstream file("decomposition.dot");
