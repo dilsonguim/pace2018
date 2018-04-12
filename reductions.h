@@ -4,6 +4,7 @@
 #include "trie/bell_dp.h"
 #include "nice_tree/nice.h"
 #include "instance.h"
+#include <algorithm>
 #include <iostream>
 #include <vector>
 

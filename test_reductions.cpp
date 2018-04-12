@@ -9,6 +9,14 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
    Instance* instance = parseInput(cin);
-   reduceAndSolve(instance);
+   vector<Edge> sol = reduceAndSolve(instance);
+   long long value = 0;
+   for (const auto& e : sol) {
+      value += e.weight;
+   }
+   cout << "VALUE " << value << endl;
+   for (const auto& e : sol) {
+      cout << (e.endpoints[0] + 1) << ' ' << (e.endpoints[1] + 1) << endl;
+   }
    delete instance;
 }

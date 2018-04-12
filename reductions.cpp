@@ -22,7 +22,6 @@ bool degreeOneTest(Instance* instance, vector<Edge>& solution) {
     auto& node = id_node_pair.second;
     if (node.edges.size() != 1)
       continue;
-    cerr << "deg 1: " << node.id << endl;
 
     Edge e = g.removeEdge(*node.edges.begin());
     int v = g.neighbour(node.id, e);
@@ -138,9 +137,9 @@ static void dfs_tree(Bell& solver, vector<vector<int>>& tree, int a, int p) {
 vector<Edge> reduceAndSolve(Instance* instance) {
   vector<Edge> solution;
 
-  // if (degreeOneTest(instance, solution)) return solution;
+  if (degreeOneTest(instance, solution)) return solution;
   // if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
-  // if (parallelEdgeTest(instance, solution)) return solution;
+  if (parallelEdgeTest(instance, solution)) return solution;
 
   // cerr << "Irreducible n = " << instance->graph.nodes.size() <<
   //     " m = " << instance->graph.edges.size() << endl;
@@ -228,6 +227,24 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   else {
     sol = solver.RootSolution(nice.root);
   }
+  sort(sol->edges.begin(), sol->edges.end());
+
+  for (auto& id_edge_pair : instance->graph.edges) {
+    auto& e = id_edge_pair.second;
+    
+    int a = new_node_id[e.endpoints[0]];
+    int b = new_node_id[e.endpoints[1]];
+
+    if (binary_search(sol->edges.begin(), sol->edges.end(), vector<int>{a, b})
+       or binary_search(sol->edges.begin(), sol->edges.end(), vector<int>{b, a})
+       ) {
+
+       solution.push_back(e);
+    }
+  }
+
+
+  
 
   bool file_print = false;
   if (file_print) {
@@ -252,20 +269,16 @@ vector<Edge> reduceAndSolve(Instance* instance) {
       file.close();
     }
 
+
     {
       ofstream file("graph.dot");
       DrawGraph(solver.graph, solver.is_terminal, file);
       file.close();
     }
   }
+  
+  /*
   bool debug = false;
-  if (!debug) {
-    cout << "VALUE " << sol->val << endl;
-    for (auto& e : sol->edges) {
-      cout << e[0] << " " << e[1] << endl;
-    }
-    return solution;
-  }
 
   cerr << "Solution value is " << sol->val << endl;
   for (auto& e : sol->edges) {
@@ -292,6 +305,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
     DrawGraph(sol_graph, solver.is_terminal, file);
     file.close();
   }
+  */
 
 
   if (false) {
