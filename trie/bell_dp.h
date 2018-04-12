@@ -24,6 +24,11 @@
 using namespace std;
 
 struct Bell {
+  Bell() {
+    numeros = totais = 0;  
+  }
+  long long numeros;
+  long long totais;
 
   bool Solve(int bag);
 

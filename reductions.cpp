@@ -1,6 +1,7 @@
 #include "nice_tree/draw_nice.h"
 #include "reductions.h"
 #include "trie/brute_force.h"
+#include "trie/order_optimizer.h"
 
 /*******************************************************************************
 The implementation of a reduction consists of a function that gets a pointer
@@ -216,6 +217,9 @@ vector<Edge> reduceAndSolve(Instance* instance) {
     sort(adj.begin(), adj.end());
   }
   solver.dp.resize(solver.bags.size());
+  OrderOptimizer order_optimizer(&solver.tree);
+  order_optimizer.Solve(nice.root);
+  order_optimizer.Optimize(nice.root);
 
   Trie* sol = NULL;
   if (!solver.Solve(nice.root)) {

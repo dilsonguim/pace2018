@@ -25,13 +25,13 @@ bool Bell::Solve(int bag) {
       SolveJoin(bag);
     }
   }
+  for(auto& c : tree[bag]) {
+    dp[c].reset(NULL);  
+  }
   if (dp[bag]->children.size()) {
     dp[bag]->FillNext(dp[bag].get());
     return true;
     DisclaimDP(bag);
-  }
-  for(auto& c : tree[bag]) {
-    dp[c].reset(NULL);  
   }
   //cerr << "deu pau na bag: " << bag << endl;
   return false;
@@ -366,6 +366,10 @@ void Bell::DisclaimDP(int bag) {
   //cerr << "Disclaiming DP for bag " << bag << endl;
   Trie* sol = dp[bag]->next;
   while (sol != NULL) {
+    if(sol->val >= 19467) {
+      numeros++;  
+    }
+    totais++;
     //cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val;
     //cerr << " | edges: " << edge_printer(sol->edges) << endl;
     sol = sol->next;
