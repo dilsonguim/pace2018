@@ -1,5 +1,6 @@
 #include "bell_dp.h"
 #include "dsu.h"
+#include "fly_dsu.h"
 
 bool Bell::Solve(int bag) {
   if (tree[bag].empty()) {
@@ -292,31 +293,13 @@ static void PaintingDFS(int root, int color,
   }
 }
 
-static bool Merge(vector<int>& l_coloring, vector<int>& r_coloring,
-                  vector<int>& j_coloring) {
-  int tw = l_coloring.size();
-  DSU dsu(r_coloring.size());
-  vector<int> loops(tw, 0);
-  vector<vector<int>> auxiliary_graph(tw);
+static void PaintGraph(vector<int>& l_coloring, vector<int>& r_coloring,
+                       vector<int>& j_coloring, vector<vector<int>>& auxiliary_graph) {
+  vector<int> visits(l_coloring.size());
   int i = 1;
-  while (i < l_coloring.size()) {
-    int lc = l_coloring[i], rc = r_coloring[i];
-    if (lc && rc) {
-      auxiliary_graph[lc].push_back(rc);
-      auxiliary_graph[rc].push_back(lc);
-      loops[lc] += (lc == rc);
-      if (loops[lc] > 1 || (lc != rc && dsu.Find(lc) == dsu.Find(rc))) {
-        return false;
-      }
-      dsu.Union(lc, rc);
-    }
-    i++;
-  }
-  i = 1;
-  loops.assign(tw, 0);
   while (i < auxiliary_graph.size()) {
-    if (!loops[i]) {
-      PaintingDFS(i, i, auxiliary_graph, loops);
+    if (!visits[i]) {
+      PaintingDFS(i, i, auxiliary_graph, visits);
     }
     i++;
   }
@@ -324,10 +307,51 @@ static bool Merge(vector<int>& l_coloring, vector<int>& r_coloring,
   j_coloring = l_coloring;
   while (i < j_coloring.size()) {
     int c = (l_coloring[i]) ? l_coloring[i] : r_coloring[i];
-    j_coloring[i] = loops[c];
+    j_coloring[i] = visits[c];
     i++;
   }
-  return true;
+}
+
+static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie, vector<int>& multi_arc,
+                        FlyDSU& dsu, vector<vector<int>>& auxiliary_graph) {
+  if(!l_trie->children.size()) {
+    vector<int> j_coloring(l_trie->colors.size());
+    PaintGraph(l_trie->colors, r_trie->colors, j_coloring, auxiliary_graph);
+    Trie* node = trie->Build(j_coloring);
+    if(node->val > l_trie->val + r_trie->val) {
+      node->val = l_trie->val + r_trie->val;
+      node->edges = l_trie->edges;
+      for(auto& e : r_trie->edges) {
+        node->edges.push_back(e);  
+      }
+    }
+  }
+  for(auto& fl : l_trie->children) {
+    int c = fl.first;
+    for(auto& fr : r_trie->children) {
+      int d = fr.first;
+      if(!c || !d) {
+        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu, auxiliary_graph);
+      }
+      else if((c == d && multi_arc[c] == 1) || (c != d && dsu.Find(c) == dsu.Find(d))) {
+        continue;
+      }
+      else if(c == d) {
+        multi_arc[c]++;  
+        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu, auxiliary_graph);
+        multi_arc[c]--;
+      }
+      else {
+        dsu.Union(c, d);
+        auxiliary_graph[c].push_back(d);
+        auxiliary_graph[d].push_back(c);
+        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu, auxiliary_graph);
+        auxiliary_graph[c].pop_back();
+        auxiliary_graph[d].pop_back();
+        dsu.Undo();
+      }
+    }
+  }
 }
 
 void Bell::SolveJoin(int bag) {
@@ -338,38 +362,16 @@ void Bell::SolveJoin(int bag) {
 
   Trie* l_trie = dp[left].get();
   Trie* r_trie = dp[right].get();
-  Trie* sol = l_trie->next;
-  while (sol != NULL) {
-    Trie* other_sol = r_trie->next;
-    while (other_sol != NULL) {
-      vector<int> coloring;
-      //cerr << "Trying to merge " << vec_printer(sol->colors) << ", to ";
-      //cerr << vec_printer(other_sol->colors) << endl;
-      if (Merge(sol->colors, other_sol->colors, coloring)) {
-        Trie* node = trie->Build(coloring);
-        if (node->val > sol->val + other_sol->val) {
-          //cerr << "\tSuccesfully built " << vec_printer(coloring) << endl;
-          node->val = sol->val + other_sol->val;
-          node->edges = sol->edges;
-          for (auto& e : other_sol->edges) {
-            node->edges.push_back(e);
-          }
-        }
-      }
-      other_sol = other_sol->next;
-    }
-    sol = sol->next;
-  }
+  vector<int> multi_arc(bags[bag].size() + 1);
+  FlyDSU dsu(multi_arc.size());
+  vector<vector<int>> auxiliary_graph(multi_arc.size());
+  FlyingMerge(l_trie, r_trie, trie, multi_arc, dsu, auxiliary_graph); 
 }
 
 void Bell::DisclaimDP(int bag) {
   //cerr << "Disclaiming DP for bag " << bag << endl;
   Trie* sol = dp[bag]->next;
   while (sol != NULL) {
-    if(sol->val >= 19467) {
-      numeros++;  
-    }
-    totais++;
     //cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val;
     //cerr << " | edges: " << edge_printer(sol->edges) << endl;
     sol = sol->next;

@@ -1,5 +1,5 @@
-#ifndef _H_DSU_H_
-#define _H_DSU_H_
+#ifndef _H_FLY_DSU_H_
+#define _H_FLY_DSU_H_
 
 #include <algorithm>
 #include <cstdlib>
@@ -20,8 +20,8 @@
 
 using namespace std;
 
-struct DSU {
-  DSU(int size) {
+struct FlyDSU {
+  FlyDSU(int size) {
     int i = 0;
     while(i < size) {
       sets.push_back(i++);
@@ -31,10 +31,14 @@ struct DSU {
 
   int Union(int a, int b);
   int Find(int a);
+  void Undo();
 
   vector<int> sets;
   vector<int> sizes;
+  // ops[i].first was merged into ops[i].second.
+  vector<pair<int,int>> ops;
 };
 
 
 #endif
+
