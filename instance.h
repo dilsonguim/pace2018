@@ -1,6 +1,7 @@
 #ifndef H_INSTANCE_
 #define H_INSTANCE_
 
+#include "tree_decomposition.h"
 #include <algorithm>
 #include <cassert>
 #include <map>
@@ -43,26 +44,37 @@ struct DynamicGraph {
    void addNode(Node node);
 
    int neighbour(int node, Edge& edge);
+
+   map<int, int> remapNodeIds();
+   
+   vector<bool> getRemappedTerminals(const map<int, int>& new_node_id);
+
+   vector<vector<pair<int, int>>> getRemappedGraph(
+         const map<int, int>& new_node_id);
+};
+
+struct DynamicTreeDecomposition {
+   vector<set<int>> bags;
+   vector<vector<int>> tree;
+
+   struct ReplacementUndoData {
+      vector<pair<int, int>> add;
+      vector<pair<int, int>> remove;
+   };
+
+   ReplacementUndoData replaceNode(int a, int b);
+
+   void undoReplaceNode(const ReplacementUndoData& undo_data);
+
+   TreeDecomposition getRemappedTreeDecomposition(
+         const map<int, int>& new_node_id);
 };
 
 struct Instance {
 
    DynamicGraph graph;
-
-   //Tree decomposition
-   vector<vector<int>> bags;
-   vector<vector<int>> tree;
-
-   void addNode(int id);
-   void removeNode(int id);
-
-   void addEdge(int a, int b, int w);
-   void removeEdge(int a, int b);
-
-   bool hasNode(int id);
-
-   //Removes node b from adj[a]
-   void removeFromAdj(int a, int b);
+   
+   DynamicTreeDecomposition td;
 };
 
 #endif

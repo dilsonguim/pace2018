@@ -63,6 +63,7 @@ bool nonTerminalDegreeTwoTest(Instance* instance, vector<Edge>& solution) {
     int u = g.neighbour(mid.id, e[0]);
     int v = g.neighbour(mid.id, e[1]);
     int uv_id = g.createEdge(u, v, e[0].weight + e[1].weight);
+    auto td_undo_data = instance->td.replaceNode(mid.id, u);
 
     solution = reduceAndSolve(instance);
     for (auto& sol_edge : solution) {
@@ -73,6 +74,7 @@ bool nonTerminalDegreeTwoTest(Instance* instance, vector<Edge>& solution) {
       }
     }
 
+    instance->td.undoReplaceNode(td_undo_data);
     g.removeEdge(uv_id);
     g.addNode(mid);
     g.addEdge(e[0]);
@@ -138,84 +140,72 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   vector<Edge> solution;
 
   if (degreeOneTest(instance, solution)) return solution;
-  // if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
+  if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
   if (parallelEdgeTest(instance, solution)) return solution;
 
   // cerr << "Irreducible n = " << instance->graph.nodes.size() <<
   //     " m = " << instance->graph.edges.size() << endl;
 
+  Bell solver;
   auto& g = instance->graph;
-  int n = 0;
+  map<int, int> new_node_id = g.remapNodeIds();
+  solver.is_terminal = g.getRemappedTerminals(new_node_id);
+  solver.graph = g.getRemappedGraph(new_node_id);
 
-  vector<bool> is_terminal;
-  is_terminal.push_back(false);
-
-  map<int, int> new_node_id;
-  for (auto& id_node_pair : g.nodes) {
-    auto& node = id_node_pair.second;
-    n++;
-    // cerr << "node.id: " << node.id << ", n: " << n << endl;
-    new_node_id[node.id] = n;
-    is_terminal.push_back(node.terminal);
+  /*
+  cout << "Graph:" << endl;
+  for (int i = 1; i < solver.graph.size(); i++) {
+     cout << i << ":";
+     for (auto e : solver.graph[i]) {
+        cout << " (" << e.first << ", " << e.second << ")";
+     }
+     cout << endl;
   }
+  cout << endl;
+  */
 
-  map<int, int> new_bag_id;
-  vector<vector<int>> bags(1);
-  int max_bag_size = 0;
-  // cerr << "bags_size = " << instance->bags.size() << endl;
-  for (int old_bag_id = 0; old_bag_id < instance->bags.size(); old_bag_id++) {
-    auto& old_bag = instance->bags[old_bag_id];
-    vector<int> new_bag;
-    for (auto& id : old_bag) {
-      if (not new_node_id.count(id))
-        continue;
-      new_bag.push_back(new_node_id[id]);
-    }
-    if (new_bag.empty())
-      continue;
-    new_bag_id[old_bag_id] = bags.size();
-    bags.push_back(new_bag);
-    max_bag_size = max(max_bag_size, int(new_bag.size()));
-  }
+  TreeDecomposition td = instance->td.getRemappedTreeDecomposition(new_node_id);
+  td.removeSubsetBags();
+  auto bags = td.getBags();
+  auto tree = td.getTree();
 
-  vector<vector<int>> tree(bags.size());
-  for (int i = 0; i < instance->tree.size(); i++) {
-    if (not new_bag_id.count(i))
-      continue;
-    for (int j : instance->tree[i]) {
-      if (not new_bag_id.count(j))
-        continue;
-      tree[new_bag_id[i]].push_back(new_bag_id[j]);
-    }
+  /*
+  cout << "Bags:" << endl;
+  for (int i = 1; i < bags.size(); i++) {
+     cout << i << ":";
+     for (auto node : bags[i]) {
+        cout << ' ' << node;
+     }
+     cout << endl;
   }
+  cout << endl;
+
+  cout << "Tree:" << endl;
+  for (int i = 1; i < tree.size(); i++) {
+     cout << i << ":";
+     for (int j : tree[i]) {
+        cout << ' ' << j;
+     }
+     cout << endl;
+  }
+  cout << endl;
+
+  Nice checker;
+  assert(checker.isTD(tree, bags, vector<bool>(solver.graph.size(), true), 1,
+                      solver.graph));
+  */
 
   Nice nicefier;
-  auto nice = nicefier.getNiceTree(tree, bags, is_terminal, max_bag_size);
-
-  Bell solver;
-  solver.graph.resize(n + 1);
-  solver.is_terminal = is_terminal;
+  auto nice = nicefier.getNiceTree(tree, bags, solver.is_terminal,
+                                   td.maxBagSize());
   solver.tree.resize(nice.tree.size());
   dfs_tree(solver, nice.tree, nice.root, -1);
-
   solver.bags = nice.bags;
-  for (auto& id_edge_pair : instance->graph.edges) {
-    auto& e = id_edge_pair.second;
-    int w = e.weight;
-
-    int a = new_node_id[e.endpoints[0]];
-    int b = new_node_id[e.endpoints[1]];
-    solver.graph[a].push_back({ b, w });
-    solver.graph[b].push_back({ a, w });
-  }
-
   for (auto& bag : solver.bags) {
     sort(bag.begin(), bag.end());
   }
-  for (auto& adj : solver.graph) {
-    sort(adj.begin(), adj.end());
-  }
   solver.dp.resize(solver.bags.size());
+
   OrderOptimizer order_optimizer(&solver.tree);
   order_optimizer.Solve(nice.root);
   order_optimizer.Optimize(nice.root);
@@ -223,6 +213,7 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   Trie* sol = NULL;
   if (!solver.Solve(nice.root)) {
     cerr << "Existem terminais em mais de uma componente conexa" << endl;
+    exit(0);
   }
   else {
     sol = solver.RootSolution(nice.root);
@@ -245,90 +236,5 @@ vector<Edge> reduceAndSolve(Instance* instance) {
 
 
   
-
-  bool file_print = false;
-  if (file_print) {
-    {
-      ofstream file("decomposition.dot");
-      Draw(solver.tree, solver.bags, solver.is_terminal, file);
-      file.close();
-    }
-
-    if (true) {
-      ofstream file("solution.dot");
-      vector<vector<pair<int, int>>> sol_graph(solver.graph.size());
-      for (auto& e : sol->edges) {
-        int w = 0;
-        for (auto& x : solver.graph[e[0]]) {
-          w = (x.first == e[1]) ? x.second : w;
-        }
-        sol_graph[e[0]].push_back({ e[1], w });
-        sol_graph[e[1]].push_back({ e[0], w });
-      }
-      DrawGraph(sol_graph, solver.is_terminal, file);
-      file.close();
-    }
-
-
-    {
-      ofstream file("graph.dot");
-      DrawGraph(solver.graph, solver.is_terminal, file);
-      file.close();
-    }
-  }
-  
-  /*
-  bool debug = false;
-
-  cerr << "Solution value is " << sol->val << endl;
-  for (auto& e : sol->edges) {
-    cerr << e[0] << " " << e[1] << endl;
-  }
-
-  unique_ptr<Solution> brute_sol(BruteForceSolve(solver));
-  cerr << "Brute force solution value is " << brute_sol->val << endl;
-  for (auto& e : brute_sol->edges) {
-    cerr << e[0] << " " << e[1] << endl;
-  }
-
-  if (true) {
-    ofstream file("brute_solution.dot");
-    vector<vector<pair<int, int>>> sol_graph(solver.graph.size());
-    for (auto& e : brute_sol->edges) {
-      int w = 0;
-      for (auto& x : solver.graph[e[0]]) {
-        w = (x.first == e[1]) ? x.second : w;
-      }
-      sol_graph[e[0]].push_back({ e[1], w });
-      sol_graph[e[1]].push_back({ e[0], w });
-    }
-    DrawGraph(sol_graph, solver.is_terminal, file);
-    file.close();
-  }
-  */
-
-
-  if (false) {
-    cerr << "verificando se eh tree decomposition" << endl;
-
-    if (nicefier.isTD(nice.tree, nice.bags, is_terminal, nice.root,
-                      solver.graph)) {
-      cerr << "eh tree decompositon" << endl;
-    } else {
-      cerr << "WARNING!!!!!! :X" << endl;
-      cerr << "nao eh tree decompositon" << endl;
-    }
-
-    cerr << "verificando se tem as propriedades nice" << endl;
-
-    if (nicefier.isNice(nice.tree, nice.bags, is_terminal, nice.root)) {
-      cerr << "esta nice" << endl;
-    } else {
-      cerr << "WARNING!!!!!! :X" << endl;
-      cerr << "nao eh nice decomposition" << endl;
-    }
-
-    nicefier.Debug();
-  }
   return solution;
 }

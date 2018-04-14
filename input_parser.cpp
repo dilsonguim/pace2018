@@ -71,8 +71,8 @@ void parseTreeDecomposition(istream& in, Instance* instance, string x) {
    int tw;
    int n;
    in >> num_bags >> tw >> n;
-   instance->bags.resize(num_bags);
-   instance->tree.resize(num_bags);
+   instance->td.bags.resize(num_bags);
+   instance->td.tree.resize(num_bags);
    getline(in, skip);
    for (int i = 0; i < num_bags; i++) {
       string line;
@@ -86,7 +86,7 @@ void parseTreeDecomposition(istream& in, Instance* instance, string x) {
          int node;
          line_in >> node;
          if (not line_in) break;
-         instance->bags[id].push_back(node - 1);
+         instance->td.bags[id].insert(node - 1);
       }
    }
    for (int i = 0; i < num_bags - 1; i++) {
@@ -94,8 +94,8 @@ void parseTreeDecomposition(istream& in, Instance* instance, string x) {
       in >> a >> b;
       a--;
       b--;
-      instance->tree[a].push_back(b);
-      instance->tree[b].push_back(a);
+      instance->td.tree[a].push_back(b);
+      instance->td.tree[b].push_back(a);
    }
 
    if (x == "") in >> skip;

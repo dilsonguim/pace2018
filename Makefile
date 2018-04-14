@@ -1,7 +1,8 @@
-CFLAGS=-O3 -std=c++11 -Wall
+#CFLAGS=-O3 -std=c++11 -Wall -g3
+CFLAGS=-O4 -std=c++11 -Wall 
 
-all: dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o
-	g++ dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o test_reductions.cpp -o solution $(CFLAGS)
+all: dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o
+	g++ dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o test_reductions.cpp -o solution $(CFLAGS)
 
 dsu.o: trie/dsu.h trie/dsu.cc
 	g++ -c trie/dsu.cc -o dsu.o $(CFLAGS)
@@ -35,6 +36,9 @@ input_parser.o: input_parser.h input_parser.cpp
 
 reductions.o: reductions.h reductions.cpp
 	g++ -c reductions.cpp -o reductions.o $(CFLAGS)
+
+tree_decomposition.o: tree_decomposition.h tree_decomposition.cpp
+	g++ -c tree_decomposition.cpp -o tree_decomposition.o $(CFLAGS)
 
 clean:
 	rm -rf *.o
