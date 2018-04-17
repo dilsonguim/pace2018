@@ -1,8 +1,8 @@
 #CFLAGS=-O3 -std=c++11 -Wall -g3
 CFLAGS=-O4 -std=c++11 -Wall 
 
-all: dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o
-	g++ dsu.o trie.o bell_dp.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o test_reductions.cpp -o solution $(CFLAGS)
+all: dsu.o trie.o bell_dp.o bell_reducer.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o
+	g++ dsu.o trie.o bell_dp.o bell_reducer.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o test_reductions.cpp -o solution $(CFLAGS)
 
 dsu.o: trie/dsu.h trie/dsu.cc
 	g++ -c trie/dsu.cc -o dsu.o $(CFLAGS)
@@ -15,6 +15,9 @@ trie.o: trie/trie.h trie/trie.cc
 
 bell_dp.o: trie/bell_dp.h trie/bell_dp.cc
 	g++ -c trie/bell_dp.cc -o bell_dp.o $(CFLAGS)
+
+bell_reducer.o: trie/bell_reducer.h trie/bell_reducer.cc
+	g++ -c trie/bell_reducer.cc -o bell_reducer.o $(CFLAGS)
 
 order_optimizer.o: trie/order_optimizer.h trie/order_optimizer.cc
 	g++ -c trie/order_optimizer.cc -o order_optimizer.o $(CFLAGS)

@@ -139,9 +139,9 @@ static void dfs_tree(Bell& solver, vector<vector<int>>& tree, int a, int p) {
 vector<Edge> reduceAndSolve(Instance* instance) {
   vector<Edge> solution;
 
-  if (degreeOneTest(instance, solution)) return solution;
-  if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
-  if (parallelEdgeTest(instance, solution)) return solution;
+  //if (degreeOneTest(instance, solution)) return solution;
+  //if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
+  //if (parallelEdgeTest(instance, solution)) return solution;
 
   // cerr << "Irreducible n = " << instance->graph.nodes.size() <<
   //     " m = " << instance->graph.edges.size() << endl;

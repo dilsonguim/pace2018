@@ -1,6 +1,15 @@
 #include "bell_dp.h"
 #include "dsu.h"
 #include "fly_dsu.h"
+#include "bell_reducer.h"
+#include "../nice_tree/draw_nice.h"
+
+static void NiceDebugger(Bell& bell) {
+  ofstream f1("decomposition.dot");
+  ofstream f2("graph.dot");
+  Draw(bell.tree, bell.bags, bell.is_terminal, f1);
+  DrawGraph(bell.graph, bell.is_terminal, f2);
+}
 
 bool Bell::Solve(int bag) {
   if (tree[bag].empty()) {
@@ -30,9 +39,17 @@ bool Bell::Solve(int bag) {
     dp[c].reset(NULL);  
   }
   if (dp[bag]->children.size()) {
-    dp[bag]->FillNext(dp[bag].get());
-    return true;
+    int s = 0;
+    long long mask = 1;
+    dp[bag]->FillNext(dp[bag].get(), s);
     DisclaimDP(bag);
+    cerr << endl << "Reducing" << endl;
+    BellReducer reducer(bags[bag].size());
+    reducer.Fix(dp[bag]);
+    dp[bag]->FillNext(dp[bag].get(), s);
+    NiceDebugger(*this);
+    DisclaimDP(bag);
+    return true;
   }
   //cerr << "deu pau na bag: " << bag << endl;
   return false;
@@ -369,11 +386,11 @@ void Bell::SolveJoin(int bag) {
 }
 
 void Bell::DisclaimDP(int bag) {
-  //cerr << "Disclaiming DP for bag " << bag << endl;
+  cerr << "Disclaiming DP for bag " << bag << endl;
   Trie* sol = dp[bag]->next;
   while (sol != NULL) {
-    //cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val;
-    //cerr << " | edges: " << edge_printer(sol->edges) << endl;
+    cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val;
+    cerr << " | edges: " << edge_printer(sol->edges) << endl;
     sol = sol->next;
   }
 }
