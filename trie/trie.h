@@ -30,7 +30,7 @@ struct Trie {
 
   Trie() : Trie(std::numeric_limits<long long>::max()) {};
 
-  map<int, unique_ptr<Trie>> children;
+  unordered_map<int, unique_ptr<Trie>> children;
   
   void Spawn(int tw);
 
@@ -44,7 +44,7 @@ struct Trie {
     return children.count(i) ? children[i].get() : NULL;
   }
 
-  Trie* FillNext(Trie* prev, int& size);
+  Trie* FillNext(Trie* prev, int* size);
 
   Trie* next;
   vector<int> colors;

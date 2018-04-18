@@ -113,8 +113,8 @@ void BellReducer::Prepare(Trie* t) {
 }
 
 void BellReducer::BinaryGaussian(long long t) {
-  cerr << "Before: " << bitstr(t) << endl;
-  Debug(*this, t);
+  //cerr << "Before: " << bitstr(t) << endl;
+  //Debug(*this, t);
   auto& matrix = matrixes[t];
   int i = 0, j = 0;
   while (i < matrix[0].first.size() && j < matrix.size()) {
@@ -141,11 +141,9 @@ void BellReducer::BinaryGaussian(long long t) {
       j++;
     }
     i++;
-    cerr << "Iterating..." << endl;
-    Debug(*this, t);
   }
-  cerr << "After" << endl;
-  Debug(*this, t);
+  //cerr << "After" << endl;
+  //Debug(*this, t);
 }
 
 void BellReducer::Fix(unique_ptr<Trie>& trie) {
@@ -153,8 +151,18 @@ void BellReducer::Fix(unique_ptr<Trie>& trie) {
   Trie* new_trie(new Trie());
   for (auto& t : matrixes) {
     int i = 0, j = 0;
-    BinaryGaussian(t.first);
     auto& matrix = t.second;
+    if(t.first) {
+      BinaryGaussian(t.first);
+    }
+    else {
+      for(auto& c : matrix) {
+        Trie* old_node = c.second;
+        Trie* new_node = new_trie->Build(old_node->colors);
+        new_node->val = old_node->val;
+        new_node->edges = old_node->edges;
+      }
+    }
     while (j < matrix.size() && i < matrix[j].first.size()) {
       Trie* old_node = matrix[j].second;
       if (matrix[j].first.at(i)) {

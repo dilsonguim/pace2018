@@ -45,16 +45,17 @@ bool Bell::Solve(int bag) {
   if (dp[bag]->children.size()) {
     int s = 0;
     long long mask = 1;
-    dp[bag]->FillNext(dp[bag].get(), s);
-    DisclaimDP(bag);
-    if (true) {
-      cerr << "Reducing" << endl;
+    dp[bag]->FillNext(dp[bag].get(), &s);
+    //DisclaimDP(bag);
+    if (s > (mask << bags[bag].size())) {
+      //cerr << "Reducing" << endl;
       BellReducer reducer(bags[bag].size());
       reducer.Fix(dp[bag]);
-      dp[bag]->FillNext(dp[bag].get(), s);
-      NiceDebugger(*this);
-      DisclaimDP(bag);
-      cerr << endl;
+      s = 0;
+      dp[bag]->FillNext(dp[bag].get(), &s);
+      //NiceDebugger(*this);
+      //DisclaimDP(bag);
+      //cerr << endl;
     }
     return true;
   }

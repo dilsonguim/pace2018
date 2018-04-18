@@ -72,9 +72,9 @@ Trie* Trie::Query(vector<int>& coloring) {
   return node;
 }
 
-Trie* Trie::FillNext(Trie* prev, int& size) {
+Trie* Trie::FillNext(Trie* prev, int* size) {
   if(children.empty()) {
-    size++;
+    (*size)++;
     prev->next = this;  
     return this;
   }
