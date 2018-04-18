@@ -30,7 +30,7 @@ struct Trie {
 
   Trie() : Trie(std::numeric_limits<long long>::max()) {};
 
-  unordered_map<int, unique_ptr<Trie>> children;
+  map<int, unique_ptr<Trie>> children;
   
   void Spawn(int tw);
 

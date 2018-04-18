@@ -2,25 +2,44 @@
 
 static long long mask = 0x1;
 
-static void Powerset(int n, vector<long long>& powerset, long long curr) {
-  if (n == 1) {
-    powerset.push_back(curr);
-    return;
+static string bitstr(long long bits) {
+  int i = 0;
+  stringstream s;
+  while (i < 5) {
+    s << (bits & 1) << " ";
+    bits >>= 1;
+    i++;
   }
-  Powerset(n - 1, powerset, curr);
-  Powerset(n - 1, powerset, curr | (mask << n));
+  return s.str();
 }
 
 static bool IsContained(vector<int>& coloring, long long subset) {
-  vector<long long> bits(coloring.size());
-  int i = 1;
+  unordered_map<int, long long> bits;
+  int i = 0;
   while (i < coloring.size()) {
     int c = coloring[i];
     bits[c] |= (mask << i);
     long long bitwise_and = bits[c] & subset;
-    if (bitwise_and == bits[c] || !bitwise_and) {
+    i++;
+  }
+  i = 0;
+  while (i < coloring.size()) {
+    int c = coloring[i];
+    //cerr << "for color " << c << ": " << bitstr(bits[c]) << endl;
+    //cerr << "\t with subset: "  << bitstr(bits[c] & subset) << endl;
+    //cerr << "\t with ~subset: " << bitstr(bits[c] & ~subset) << endl;
+    i++;
+  }
+  i = 0;
+  while (i < coloring.size()) {
+    int c = coloring[i];
+    if (((bits[c] & subset) == bits[c]) || ((bits[c] & ~subset) == bits[c])) {
       i++;
-    } else {
+    }
+    else {
+      //cerr << "color " << c << " fucked up because:" << endl;
+      //cerr << "\t with subset: "  << ((bits[c] & subset) != bits[c]) << endl;
+      //cerr << "\t with ~subset: " << ((bits[c] & ~subset) != bits[c]) << endl;
       return false;
     }
   }
@@ -38,7 +57,7 @@ static pair<long long, long long> ToBits(vector<int>& coloring) {
   long long bits = 0;
   int i = 1, s = 0;
   while (i < coloring.size()) {
-    bits |= (coloring[i] != 0) << i;
+    bits |= (coloring[i] != 0) << (i - 1);
     s += coloring[i] != 0;
     i++;
   }
@@ -47,9 +66,9 @@ static pair<long long, long long> ToBits(vector<int>& coloring) {
 
 static void PruneColoring(vector<int>& coloring, long long bits) {
   vector<int> new_coloring;
-  int i = 0;
+  int i = 1;
   while (i < coloring.size()) {
-    if (bits & (mask << i)) {
+    if (bits & (mask << (i - 1))) {
       new_coloring.push_back(coloring[i]);
     }
     i++;
@@ -57,16 +76,6 @@ static void PruneColoring(vector<int>& coloring, long long bits) {
   coloring = new_coloring;
 }
 
-static string bitstr(long long bits) {
-  int i = 0;
-  stringstream s;
-  while (i < 5) {
-    s << (bits & 1) << " ";
-    bits >>= 1;
-    i++;
-  }
-  return s.str();
-}
 
 void BellReducer::Prepare(Trie* t) {
   unordered_map<long long, map<long long, vector<Trie*>>> sorting;
@@ -82,13 +91,19 @@ void BellReducer::Prepare(Trie* t) {
     for (auto& p : s.second) {      // for each cost.
       for (auto& sol : p.second) {  // for each solution in the dp.
         long long limit = (mask << (bit_count[bits]));
-        BitString current(limit);
+        BitString current(limit>>1);
         vector<int> coloring = sol->colors;
         PruneColoring(coloring, bits);
         for (long long subset = 1; subset < limit;
              subset += 2) {  // for each possible subset.
+          //cerr << vec_printer(coloring) << " is good with bitset "
+          //     << bitstr(subset) << ", " << bitstr(~subset) << "?" << endl;
           if (IsContained(coloring, subset)) {
-            current.on(subset);
+            //cerr << " yes" << endl;
+            current.on(subset >> 1);
+          }
+          else {
+            //cerr << " no" << endl;
           }
         }
         matrixes[bits].push_back({ current, sol });
@@ -126,6 +141,8 @@ void BellReducer::BinaryGaussian(long long t) {
       j++;
     }
     i++;
+    cerr << "Iterating..." << endl;
+    Debug(*this, t);
   }
   cerr << "After" << endl;
   Debug(*this, t);
@@ -140,7 +157,7 @@ void BellReducer::Fix(unique_ptr<Trie>& trie) {
     auto& matrix = t.second;
     while (j < matrix.size() && i < matrix[j].first.size()) {
       Trie* old_node = matrix[j].second;
-      if (matrix[j].first.at(i) || !t.first) {
+      if (matrix[j].first.at(i)) {
         Trie* new_node = new_trie->Build(old_node->colors);
         new_node->val = old_node->val;
         new_node->edges = old_node->edges;
