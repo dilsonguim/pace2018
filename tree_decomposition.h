@@ -15,6 +15,9 @@ struct TreeDecomposition {
    vector<set<int>> tree;
 
    int removeSubsetBags();
+   int clearBags(const vector<vector<pair<int, int>>>& graph);
+   void cleanDecomposition(const vector<vector<pair<int, int>>>& graph);
+
    int maxBagSize();
    
    vector<vector<int>> getBags();

@@ -84,3 +84,63 @@ vector<vector<int>> TreeDecomposition::getTree() {
    return remaining_tree;
 }
 
+
+int TreeDecomposition::clearBags(const vector<vector<pair<int, int>>>& graph) {
+   int operations = 0;
+
+   vector<int> order(bags.size() - 1);
+   for (int i = 1; i < bags.size(); i++) {
+      order[i - 1] = i;
+   }
+   sort(order.begin(), order.end(), [&](int i, int j) {
+                                       return bags[i].size() > bags[j].size();
+                                    });
+
+
+   for (auto bag_id : order) {
+      for (int i : bags[bag_id]) {
+         int ngb_count = 0;
+         for (int ngb_bag : tree[bag_id]) {
+            if (bags[ngb_bag].count(i)) {
+               ngb_count++;
+               if (ngb_count > 1) break;
+            }
+         }
+         if (ngb_count > 1) continue;
+
+         
+         bool can_remove = true;
+         for (const auto& e : graph[i]) {
+            int j = e.first;
+
+            bool represented_elsewhere = false;
+            for (int k : inv_bags[i]) {
+               if (k == bag_id) continue;
+               if (not inv_bags[j].count(k)) continue;
+               represented_elsewhere = true;
+               break;
+            }
+            if (not represented_elsewhere) {
+               can_remove = false;
+               break;
+            }
+         }
+
+         if (can_remove) {
+            bags[bag_id].erase(i);
+            inv_bags[i].erase(bag_id);
+            operations++;
+         }
+      }
+   }
+
+   return operations;
+}
+   
+void TreeDecomposition::cleanDecomposition(
+      const vector<vector<pair<int, int>>>& graph) {
+
+   do {
+      removeSubsetBags();
+   } while(clearBags(graph));
+}
