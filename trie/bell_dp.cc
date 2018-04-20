@@ -1,10 +1,20 @@
+#include "../nice_tree/draw_nice.h"
 #include "bell_dp.h"
+#include "bell_reducer.h"
 #include "dsu.h"
 #include "fly_dsu.h"
 
+static void NiceDebugger(Bell& bell) {
+  ofstream f1("decomposition.dot");
+  ofstream f2("graph.dot");
+  Draw(bell.tree, bell.bags, bell.is_terminal, f1);
+  DrawGraph(bell.graph, bell.is_terminal, f2);
+}
+
 bool Bell::Solve(int bag) {
   if (tree[bag].empty()) {
-    //cerr << endl  << "Solving leaf bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+    // cerr << endl  << "Solving leaf bag " << bag << ": " <<
+    // vec_printer(bags[bag]) << endl;
     SolveLeaf(bag);
   } else {
     if (!Solve(tree[bag][0])) {
@@ -12,29 +22,44 @@ bool Bell::Solve(int bag) {
     }
     if (tree[bag].size() == 1) {
       if (bags[tree[bag][0]].size() < bags[bag].size()) {
-        //cerr << endl << "Solving introduce bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+        // cerr << endl << "Solving introduce bag " << bag << ": " <<
+        // vec_printer(bags[bag]) << endl;
         SolveIntroduce(bag);
       } else {
-        //cerr << endl << "Solving forget bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+        // cerr << endl << "Solving forget bag " << bag << ": " <<
+        // vec_printer(bags[bag]) << endl;
         SolveForget(bag);
       }
     } else {
       if (!Solve(tree[bag][1])) {
         return false;
       }
-      //cerr << endl << "Solving join bag " << bag << ": " << vec_printer(bags[bag]) << endl;
+      // cerr << endl << "Solving join bag " << bag << ": " <<
+      // vec_printer(bags[bag]) << endl;
       SolveJoin(bag);
     }
   }
-  for(auto& c : tree[bag]) {
-    dp[c].reset(NULL);  
+  for (auto& c : tree[bag]) {
+    dp[c].reset(NULL);
   }
   if (dp[bag]->children.size()) {
-    dp[bag]->FillNext(dp[bag].get());
+    int s = 0;
+    long long mask = 1;
+    dp[bag]->FillNext(dp[bag].get(), &s);
+    //DisclaimDP(bag);
+    if (s > (mask << bags[bag].size())) {
+      //cerr << "Reducing" << endl;
+      BellReducer reducer(bags[bag].size());
+      reducer.Fix(dp[bag]);
+      s = 0;
+      dp[bag]->FillNext(dp[bag].get(), &s);
+      //NiceDebugger(*this);
+      //DisclaimDP(bag);
+      //cerr << endl;
+    }
     return true;
-    DisclaimDP(bag);
   }
-  //cerr << "deu pau na bag: " << bag << endl;
+  // cerr << "deu pau na bag: " << bag << endl;
   return false;
 }
 
@@ -110,7 +135,7 @@ static void InducedNeighbourhood(vector<pair<int, int>>& total,
     if (total[i].first == bag[j]) {
       // bag[0] is not useless!
       v_neighbourhood.push_back({ total[i].first, total[i].second, j + 1 });
-      //cerr << "pushed back " << v_neighbourhood.back().str() << endl;
+      // cerr << "pushed back " << v_neighbourhood.back().str() << endl;
       i++;
       j++;
     } else if (total[i].first < bag[j]) {
@@ -144,23 +169,24 @@ static void Powerset(Trie* trie, unordered_map<int, ColorCost>& color_cost,
                      int bag, int v, vector<vector<int>>& edges) {
   if (it_color_cost == color_cost.end()) {
     vector<int> new_coloring = base_solution->colors;
-    //cerr << "Recoloring:";
+    // cerr << "Recoloring:";
     for (auto& color : recoloring) {
-      //cerr << " " << color << " -> " << min_secondary_index;
+      // cerr << " " << color << " -> " << min_secondary_index;
     }
-    //cerr << endl;
+    // cerr << endl;
     for (auto& color : new_coloring) {
       color = (recoloring.count(color)) ? min_secondary_index : color;
     }
     if (trie->Query(new_coloring)) {
-      //cerr << "I've been here before!!!" << endl;
+      // cerr << "I've been here before!!!" << endl;
     } else {
-      //cerr << "Building new coloring!" << endl;
+      // cerr << "Building new coloring!" << endl;
     }
     Trie* node = trie->Build(new_coloring);
-    //cerr << "On introduce bag " << bag << ", received " << vec_printer(base_solution->colors);
-    //cerr << " with cost " << base_val << ", built " << vec_printer(new_coloring);
-    //cerr << " with new cost " << val << " and prev cost " << node->val << endl;
+    // cerr << "On introduce bag " << bag << ", received " <<
+    // vec_printer(base_solution->colors); cerr << " with cost " << base_val <<
+    // ", built " << vec_printer(new_coloring); cerr << " with new cost " << val
+    // << " and prev cost " << node->val << endl;
     if (node->val > val) {
       node->val = val;
       node->edges = base_solution->edges;
@@ -195,7 +221,7 @@ void Bell::SolveIntroduce(int bag) {
   int phi_v =
       (lower_bound(bags[bag].begin(), bags[bag].end(), v) - bags[bag].begin()) +
       1;
-  //cerr << "introduced " << v << " phi_v = " << phi_v << endl;
+  // cerr << "introduced " << v << " phi_v = " << phi_v << endl;
 
   dp[bag].reset(new Trie());
   Trie* trie = dp[bag].get();
@@ -207,10 +233,11 @@ void Bell::SolveIntroduce(int bag) {
   sol = sol->next;
   while (sol != NULL) {
     vector<int> coloring = sol->colors;
-    //cerr << "Introduce base coloring = " << vec_printer(coloring) << endl;
+    // cerr << "Introduce base coloring = " << vec_printer(coloring) << endl;
     FixIntroduceColoring(coloring, phi_v);
     if (!is_terminal[v]) {
-      //cerr << "Default coloring " << vec_printer(coloring) << " with val " << sol->val << endl;
+      // cerr << "Default coloring " << vec_printer(coloring) << " with val " <<
+      // sol->val << endl;
       trie->Build(coloring)->val = sol->val;
       trie->Query(coloring)->edges = sol->edges;
     }
@@ -258,8 +285,9 @@ void Bell::SolveForget(int bag) {
   int v = find_diff(bags[child_bag], bags[bag]);  // extra vertex in
                                                   // |child_bag|.
   int phi_v = (lower_bound(bags[child_bag].begin(), bags[child_bag].end(), v) -
-               bags[child_bag].begin()) + 1;
-  //cerr << "Forget phi_v = " << phi_v << endl;
+               bags[child_bag].begin()) +
+              1;
+  // cerr << "Forget phi_v = " << phi_v << endl;
 
   dp[bag].reset(new Trie());
   Trie* trie = dp[bag].get();
@@ -268,10 +296,10 @@ void Bell::SolveForget(int bag) {
   sol = sol->next;
   while (sol != NULL) {
     vector<int> coloring = sol->colors;
-    //cerr << "Forget base coloring = " << vec_printer(coloring) << ", base val = ";
-    //cerr << sol->val << ", forgetting phi_v = " << phi_v << endl;
+    // cerr << "Forget base coloring = " << vec_printer(coloring) << ", base val
+    // = "; cerr << sol->val << ", forgetting phi_v = " << phi_v << endl;
     if (FixForgetColoring(coloring, phi_v)) {
-      //cerr << "Fixed to coloring " << vec_printer(coloring) << endl;
+      // cerr << "Fixed to coloring " << vec_printer(coloring) << endl;
       Trie* node = trie->Build(coloring);
       if (node->val > sol->val) {
         node->val = sol->val;
@@ -294,7 +322,8 @@ static void PaintingDFS(int root, int color,
 }
 
 static void PaintGraph(vector<int>& l_coloring, vector<int>& r_coloring,
-                       vector<int>& j_coloring, vector<vector<int>>& auxiliary_graph) {
+                       vector<int>& j_coloring,
+                       vector<vector<int>>& auxiliary_graph) {
   vector<int> visits(l_coloring.size());
   int i = 1;
   while (i < auxiliary_graph.size()) {
@@ -312,40 +341,42 @@ static void PaintGraph(vector<int>& l_coloring, vector<int>& r_coloring,
   }
 }
 
-static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie, vector<int>& multi_arc,
-                        FlyDSU& dsu, vector<vector<int>>& auxiliary_graph) {
-  if(!l_trie->children.size()) {
+static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
+                        vector<int>& multi_arc, FlyDSU& dsu,
+                        vector<vector<int>>& auxiliary_graph) {
+  if (!l_trie->children.size()) {
     vector<int> j_coloring(l_trie->colors.size());
     PaintGraph(l_trie->colors, r_trie->colors, j_coloring, auxiliary_graph);
     Trie* node = trie->Build(j_coloring);
-    if(node->val > l_trie->val + r_trie->val) {
+    if (node->val > l_trie->val + r_trie->val) {
       node->val = l_trie->val + r_trie->val;
       node->edges = l_trie->edges;
-      for(auto& e : r_trie->edges) {
-        node->edges.push_back(e);  
+      for (auto& e : r_trie->edges) {
+        node->edges.push_back(e);
       }
     }
   }
-  for(auto& fl : l_trie->children) {
+  for (auto& fl : l_trie->children) {
     int c = fl.first;
-    for(auto& fr : r_trie->children) {
+    for (auto& fr : r_trie->children) {
       int d = fr.first;
-      if(!c || !d) {
-        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu, auxiliary_graph);
-      }
-      else if((c == d && multi_arc[c] == 1) || (c != d && dsu.Find(c) == dsu.Find(d))) {
+      if (!c || !d) {
+        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu,
+                    auxiliary_graph);
+      } else if ((c == d && multi_arc[c] == 1) ||
+                 (c != d && dsu.Find(c) == dsu.Find(d))) {
         continue;
-      }
-      else if(c == d) {
-        multi_arc[c]++;  
-        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu, auxiliary_graph);
+      } else if (c == d) {
+        multi_arc[c]++;
+        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu,
+                    auxiliary_graph);
         multi_arc[c]--;
-      }
-      else {
+      } else {
         dsu.Union(c, d);
         auxiliary_graph[c].push_back(d);
         auxiliary_graph[d].push_back(c);
-        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu, auxiliary_graph);
+        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu,
+                    auxiliary_graph);
         auxiliary_graph[c].pop_back();
         auxiliary_graph[d].pop_back();
         dsu.Undo();
@@ -365,15 +396,15 @@ void Bell::SolveJoin(int bag) {
   vector<int> multi_arc(bags[bag].size() + 1);
   FlyDSU dsu(multi_arc.size());
   vector<vector<int>> auxiliary_graph(multi_arc.size());
-  FlyingMerge(l_trie, r_trie, trie, multi_arc, dsu, auxiliary_graph); 
+  FlyingMerge(l_trie, r_trie, trie, multi_arc, dsu, auxiliary_graph);
 }
 
 void Bell::DisclaimDP(int bag) {
-  //cerr << "Disclaiming DP for bag " << bag << endl;
+  cerr << "Disclaiming DP for bag " << bag << endl;
   Trie* sol = dp[bag]->next;
   while (sol != NULL) {
-    //cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val;
-    //cerr << " | edges: " << edge_printer(sol->edges) << endl;
+    cerr << "coloring = " << vec_printer(sol->colors) << ", val = " << sol->val;
+    cerr << " | edges: " << edge_printer(sol->edges) << endl;
     sol = sol->next;
   }
 }
@@ -388,8 +419,8 @@ static bool IsValidRoot(vector<int>& coloring) {
       return false;
     }
   }
-  //cerr << "cs of " << vec_printer(coloring) << " is " << cs.size();
-  //cerr << " | Is valid? Answer: " << (cs.size() == 1) << endl;
+  // cerr << "cs of " << vec_printer(coloring) << " is " << cs.size();
+  // cerr << " | Is valid? Answer: " << (cs.size() == 1) << endl;
   return true;
 }
 
@@ -400,8 +431,9 @@ Trie* Bell::RootSolution(int bag) {
     if (IsValidRoot(sol->colors) && (res == NULL || res->val > sol->val)) {
       res = sol;
     }
-    //cerr << "current best solution is: " << vec_printer(sol->colors)  << ", val = " << sol->val;
-    //cerr << " | edges: " << edge_printer(sol->edges) << endl;
+    // cerr << "current best solution is: " << vec_printer(sol->colors)  << ",
+    // val = " << sol->val; cerr << " | edges: " << edge_printer(sol->edges) <<
+    // endl;
 
     sol = sol->next;
   }

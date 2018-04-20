@@ -44,7 +44,7 @@ struct Trie {
     return children.count(i) ? children[i].get() : NULL;
   }
 
-  Trie* FillNext(Trie* prev);
+  Trie* FillNext(Trie* prev, int* size);
 
   Trie* next;
   vector<int> colors;
