@@ -25,36 +25,19 @@ static bool IsZero(vector<int>& coloring) {
   return true;
 }
 
-void Trie::Spawn(int tw) {
-  vector<int> coloring(tw+2);
-  do {
-    int t = tw+1;
-    while(t) {
-      if(coloring[t] == t) {
-        coloring[t] = 0;
-      }
-      else {
-        int i = coloring[t]+1;
-        while(i < t && coloring[i] <= coloring[t]) {
-          i++;  
-        }
-        coloring[t] = i;
-      }
-      t--;
-    }
-    Build(coloring);  
-  } while(!IsZero(coloring));
-}
-
-
 Trie* Trie::Build(vector<int>& coloring) {
   int i = 0;
   Trie* node = this;
   while(i < coloring.size()) {
-    if(!node->children.count(coloring[i])) {
-      node->children[coloring[i]].reset(new Trie());
+    if(node->children.size() < coloring.size()) {
+      node->children.resize(coloring.size());
     }
-    node = node->children[coloring[i]].get();
+    int c = coloring[i];
+    if(node->children[c] == NULL) {
+      node->known_children.push_back(c);
+      node->children[c].reset(new Trie());
+    }
+    node = node->children[c].get();
     i++;
   }
   node->colors = coloring;
@@ -73,13 +56,13 @@ Trie* Trie::Query(vector<int>& coloring) {
 }
 
 Trie* Trie::FillNext(Trie* prev, int* size) {
-  if(children.empty()) {
+  if(known_children.empty()) {
     (*size)++;
     prev->next = this;  
     return this;
   }
-  for(auto& c : children) {
-    prev = c.second->FillNext(prev, size);
+  for(auto& c : known_children) {
+    prev = children[c]->FillNext(prev, size);
   }
   return prev;
 }

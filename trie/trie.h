@@ -30,9 +30,8 @@ struct Trie {
 
   Trie() : Trie(std::numeric_limits<long long>::max()) {};
 
-  unordered_map<int, unique_ptr<Trie>> children;
-  
-  void Spawn(int tw);
+  vector<unique_ptr<Trie>> children;
+  vector<int> known_children;
 
   //|coloring| at pos=0 is useless!
   Trie* Query(vector<int>& coloring);
@@ -41,7 +40,7 @@ struct Trie {
   Trie* Build(vector<int>& coloring);
 
   Trie* operator[](int i) {
-    return children.count(i) ? children[i].get() : NULL;
+    return (i < children.size()) ? children[i].get() : NULL;
   }
 
   Trie* FillNext(Trie* prev, int* size);

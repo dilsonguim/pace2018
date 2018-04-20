@@ -42,12 +42,12 @@ bool Bell::Solve(int bag) {
   for (auto& c : tree[bag]) {
     dp[c].reset(NULL);
   }
-  if (dp[bag]->children.size()) {
+  if (dp[bag]->known_children.size()) {
     int s = 0;
     long long mask = 1;
     dp[bag]->FillNext(dp[bag].get(), &s);
     //DisclaimDP(bag);
-    if (s > (mask << bags[bag].size())) {
+    if (false) {
       //cerr << "Reducing" << endl;
       BellReducer reducer(bags[bag].size());
       reducer.Fix(dp[bag]);
@@ -344,7 +344,7 @@ static void PaintGraph(vector<int>& l_coloring, vector<int>& r_coloring,
 static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
                         vector<int>& multi_arc, FlyDSU& dsu,
                         vector<vector<int>>& auxiliary_graph) {
-  if (!l_trie->children.size()) {
+  if (l_trie->known_children.empty()) {
     vector<int> j_coloring(l_trie->colors.size());
     PaintGraph(l_trie->colors, r_trie->colors, j_coloring, auxiliary_graph);
     Trie* node = trie->Build(j_coloring);
@@ -356,26 +356,28 @@ static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
       }
     }
   }
-  for (auto& fl : l_trie->children) {
-    int c = fl.first;
-    for (auto& fr : r_trie->children) {
-      int d = fr.first;
+  for (auto& fl : l_trie->known_children) {
+    int c = fl;
+    Trie* fl_node = l_trie->children[c].get();
+    for (auto& fr : r_trie->known_children) {
+      int d = fr;
+      Trie* fr_node = r_trie->children[d].get();
       if (!c || !d) {
-        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu,
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu,
                     auxiliary_graph);
       } else if ((c == d && multi_arc[c] == 1) ||
                  (c != d && dsu.Find(c) == dsu.Find(d))) {
         continue;
       } else if (c == d) {
         multi_arc[c]++;
-        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu,
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu,
                     auxiliary_graph);
         multi_arc[c]--;
       } else {
         dsu.Union(c, d);
         auxiliary_graph[c].push_back(d);
         auxiliary_graph[d].push_back(c);
-        FlyingMerge(fl.second.get(), fr.second.get(), trie, multi_arc, dsu,
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu,
                     auxiliary_graph);
         auxiliary_graph[c].pop_back();
         auxiliary_graph[d].pop_back();
