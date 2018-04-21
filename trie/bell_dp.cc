@@ -47,7 +47,7 @@ bool Bell::Solve(int bag) {
     long long mask = 1;
     dp[bag]->FillNext(dp[bag].get(), &s);
     //DisclaimDP(bag);
-    if (false) {
+    if (true) {
       //cerr << "Reducing" << endl;
       BellReducer reducer(bags[bag].size());
       reducer.Fix(dp[bag]);
