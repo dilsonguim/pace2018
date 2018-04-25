@@ -12,6 +12,7 @@ static void NiceDebugger(Bell& bell) {
 }
 
 bool Bell::Solve(int bag) {
+  static int solvs = 0;
   if (tree[bag].empty()) {
     // cerr << endl  << "Solving leaf bag " << bag << ": " <<
     // vec_printer(bags[bag]) << endl;
@@ -57,6 +58,7 @@ bool Bell::Solve(int bag) {
       //DisclaimDP(bag);
       //cerr << endl;
     }
+    //cerr << ++solvs << "/" << bags.size() << "          " << "\r";
     return true;
   }
   // cerr << "deu pau na bag: " << bag << endl;
@@ -342,11 +344,15 @@ static void PaintGraph(vector<int>& l_coloring, vector<int>& r_coloring,
 }
 
 static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
-                        vector<int>& multi_arc, FlyDSU& dsu,
-                        vector<vector<int>>& auxiliary_graph) {
+                        vector<int>& multi_arc, FlyDSU& dsu) {
   if (l_trie->known_children.empty()) {
     vector<int> j_coloring(l_trie->colors.size());
-    PaintGraph(l_trie->colors, r_trie->colors, j_coloring, auxiliary_graph);
+    int i = 1;
+    while(i < j_coloring.size()) {
+      int c = max(l_trie->colors[i], r_trie->colors[i]);
+      j_coloring[i] = dsu.mins[dsu.Find(c)];
+      i++;
+    }
     Trie* node = trie->Build(j_coloring);
     if (node->val > l_trie->val + r_trie->val) {
       node->val = l_trie->val + r_trie->val;
@@ -363,24 +369,17 @@ static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
       int d = fr;
       Trie* fr_node = r_trie->children[d].get();
       if (!c || !d) {
-        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu,
-                    auxiliary_graph);
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu);
       } else if ((c == d && multi_arc[c] == 1) ||
                  (c != d && dsu.Find(c) == dsu.Find(d))) {
         continue;
       } else if (c == d) {
         multi_arc[c]++;
-        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu,
-                    auxiliary_graph);
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu);
         multi_arc[c]--;
       } else {
         dsu.Union(c, d);
-        auxiliary_graph[c].push_back(d);
-        auxiliary_graph[d].push_back(c);
-        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu,
-                    auxiliary_graph);
-        auxiliary_graph[c].pop_back();
-        auxiliary_graph[d].pop_back();
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu);
         dsu.Undo();
       }
     }
@@ -397,8 +396,7 @@ void Bell::SolveJoin(int bag) {
   Trie* r_trie = dp[right].get();
   vector<int> multi_arc(bags[bag].size() + 1);
   FlyDSU dsu(multi_arc.size());
-  vector<vector<int>> auxiliary_graph(multi_arc.size());
-  FlyingMerge(l_trie, r_trie, trie, multi_arc, dsu, auxiliary_graph);
+  FlyingMerge(l_trie, r_trie, trie, multi_arc, dsu);
 }
 
 void Bell::DisclaimDP(int bag) {

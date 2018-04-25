@@ -9,8 +9,11 @@ int FlyDSU::Union(int a, int b) {
   if(sizes[a] < sizes[b]) {
     return Union(b,a);  
   }
-  ops.push_back({b,a});
+  ops[pos] = {b,a};
+  ops_mins[pos] = {mins[b],mins[a]};
+  mins[a] = mins[b] = min(mins[a], mins[b]);
   sizes[a] += sizes[b];
+  pos++;
   return sets[b] = a;
 }
 
@@ -22,11 +25,14 @@ int FlyDSU::Find(int a) {
 }
 
 void FlyDSU::Undo() {
-  if(ops.size()) {
-    auto p = ops.back();
-    ops.pop_back();
+  if(pos) {
+    pos--;
+    auto p = ops[pos];
+    auto m = ops_mins[pos];
     sets[p.first] = p.first;
     sizes[p.second] -= sizes[p.first];
+    mins[p.first] = m.first;
+    mins[p.second] = m.second;
   }
 }
 
