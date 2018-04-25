@@ -1,8 +1,8 @@
 CFLAGS=-O3 -std=c++11 -Wall -g3
 #CFLAGS=-O4 -std=c++11 -Wall 
 
-all: dsu.o trie.o bell_dp.o bell_reducer.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o
-	g++ dsu.o trie.o bell_dp.o bell_reducer.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o test_reductions.cpp -o solution $(CFLAGS)
+all: dsu.o trie.o bell_dp.o bell_reducer.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o relaxation.o relaxation2.o
+	g++ dsu.o trie.o bell_dp.o bell_reducer.o brute_force.o nice.o draw_nice.o instance.o input_parser.o reductions.o order_optimizer.o fly_dsu.o tree_decomposition.o relaxation.o relaxation2.o test_reductions.cpp -o solution $(CFLAGS)
 
 dsu.o: trie/dsu.h trie/dsu.cc
 	g++ -c trie/dsu.cc -o dsu.o $(CFLAGS)
@@ -42,6 +42,12 @@ reductions.o: reductions.h reductions.cpp
 
 tree_decomposition.o: tree_decomposition.h tree_decomposition.cpp
 	g++ -c tree_decomposition.cpp -o tree_decomposition.o $(CFLAGS)
+
+relaxation.o: relaxation.h relaxation.cpp
+	g++ -c relaxation.cpp -o relaxation.o $(CFLAGS)
+
+relaxation2.o: relaxation2.h relaxation2.cpp
+	g++ -c relaxation2.cpp -o relaxation2.o $(CFLAGS)
 
 clean:
 	rm -rf *.o

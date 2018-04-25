@@ -140,8 +140,8 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   vector<Edge> solution;
 
   if (degreeOneTest(instance, solution)) return solution;
-  if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
-  if (parallelEdgeTest(instance, solution)) return solution;
+  //if (nonTerminalDegreeTwoTest(instance, solution)) return solution;
+  //if (parallelEdgeTest(instance, solution)) return solution;
 
   // cerr << "Irreducible n = " << instance->graph.nodes.size() <<
   //     " m = " << instance->graph.edges.size() << endl;
@@ -151,6 +151,9 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   map<int, int> new_node_id = g.remapNodeIds();
   solver.is_terminal = g.getRemappedTerminals(new_node_id);
   solver.graph = g.getRemappedGraph(new_node_id);
+
+  Relaxation2 relaxation(solver.graph, solver.is_terminal);
+  relaxation.Run();
 
   /*
   cout << "Graph:" << endl;
@@ -190,10 +193,10 @@ vector<Edge> reduceAndSolve(Instance* instance) {
   }
   cout << endl;
 
+  */
   Nice checker;
   assert(checker.isTD(tree, bags, vector<bool>(solver.graph.size(), true), 1,
                       solver.graph));
-  */
 
   Nice nicefier;
   auto nice = nicefier.getNiceTree(tree, bags, solver.is_terminal,
@@ -219,6 +222,8 @@ vector<Edge> reduceAndSolve(Instance* instance) {
     sol = solver.RootSolution(nice.root);
   }
   sort(sol->edges.begin(), sol->edges.end());
+
+  cout << "DP: " << sol->val << endl;
 
   for (auto& id_edge_pair : instance->graph.edges) {
     auto& e = id_edge_pair.second;

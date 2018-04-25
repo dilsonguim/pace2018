@@ -14,9 +14,11 @@ int main(int argc, char* argv[]) {
    for (const auto& e : sol) {
       value += e.weight;
    }
+   /*
    cout << "VALUE " << value << endl;
    for (const auto& e : sol) {
       cout << (e.endpoints[0] + 1) << ' ' << (e.endpoints[1] + 1) << endl;
    }
+   */
    delete instance;
 }
