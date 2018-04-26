@@ -12,6 +12,9 @@ static void NiceDebugger(Bell& bell) {
 }
 
 bool Bell::Solve(int bag) {
+  if(memorization.empty()) {
+    FillMemorization();
+  }
   static int solvs = 0;
   if (tree[bag].empty()) {
     // cerr << endl  << "Solving leaf bag " << bag << ": " <<
@@ -312,39 +315,8 @@ void Bell::SolveForget(int bag) {
   }
 }
 
-static void PaintingDFS(int root, int color,
-                        vector<vector<int>>& auxiliary_graph,
-                        vector<int>& visits) {
-  visits[root] = color;
-  for (auto s : auxiliary_graph[root]) {
-    if (!visits[s]) {
-      PaintingDFS(s, color, auxiliary_graph, visits);
-    }
-  }
-}
-
-static void PaintGraph(vector<int>& l_coloring, vector<int>& r_coloring,
-                       vector<int>& j_coloring,
-                       vector<vector<int>>& auxiliary_graph) {
-  vector<int> visits(l_coloring.size());
-  int i = 1;
-  while (i < auxiliary_graph.size()) {
-    if (!visits[i]) {
-      PaintingDFS(i, i, auxiliary_graph, visits);
-    }
-    i++;
-  }
-  i = 1;
-  j_coloring = l_coloring;
-  while (i < j_coloring.size()) {
-    int c = (l_coloring[i]) ? l_coloring[i] : r_coloring[i];
-    j_coloring[i] = visits[c];
-    i++;
-  }
-}
-
 static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
-                        vector<int>& multi_arc, FlyDSU& dsu) {
+                        vector<int>& multi_arc, FlyDSU& dsu, Bell* bell) {
   if (l_trie->known_children.empty()) {
     vector<int> j_coloring(l_trie->colors.size());
     int i = 1;
@@ -353,14 +325,9 @@ static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
       j_coloring[i] = dsu.mins[dsu.Find(c)];
       i++;
     }
-    Trie* node = trie->Build(j_coloring);
-    if (node->val > l_trie->val + r_trie->val) {
-      node->val = l_trie->val + r_trie->val;
-      node->edges = l_trie->edges;
-      for (auto& e : r_trie->edges) {
-        node->edges.push_back(e);
-      }
-    }
+
+    bell->hash_table.Insert(j_coloring, l_trie, r_trie, l_trie->val + r_trie->val);
+
   }
   for (auto& fl : l_trie->known_children) {
     int c = fl;
@@ -369,17 +336,17 @@ static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
       int d = fr;
       Trie* fr_node = r_trie->children[d].get();
       if (!c || !d) {
-        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu);
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu, bell);
       } else if ((c == d && multi_arc[c] == 1) ||
                  (c != d && dsu.Find(c) == dsu.Find(d))) {
         continue;
       } else if (c == d) {
         multi_arc[c]++;
-        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu);
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu, bell);
         multi_arc[c]--;
       } else {
         dsu.Union(c, d);
-        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu);
+        FlyingMerge(fl_node, fr_node, trie, multi_arc, dsu, bell);
         dsu.Undo();
       }
     }
@@ -387,6 +354,8 @@ static void FlyingMerge(Trie* l_trie, Trie* r_trie, Trie* trie,
 }
 
 void Bell::SolveJoin(int bag) {
+  hash_table.Clear();
+
   int left = tree[bag][0], right = tree[bag][1];
 
   dp[bag].reset(new Trie());
@@ -396,7 +365,20 @@ void Bell::SolveJoin(int bag) {
   Trie* r_trie = dp[right].get();
   vector<int> multi_arc(bags[bag].size() + 1);
   FlyDSU dsu(multi_arc.size());
-  FlyingMerge(l_trie, r_trie, trie, multi_arc, dsu);
+  FlyingMerge(l_trie, r_trie, trie, multi_arc, dsu, this);
+
+  for (auto position : hash_table.sparse) {
+    for (auto& key_reg_pair : hash_table.table[position]) {
+      auto key = key_reg_pair;
+      auto reg = key_reg_pair.reg;
+      Trie* node = trie->Build(key.coloring);
+      node->val = reg.cost;
+      node->edges = reg.left->edges;
+      for (auto& e : reg.right->edges) {
+        node->edges.push_back(e);
+      }
+    }
+  }
 }
 
 void Bell::DisclaimDP(int bag) {
@@ -438,4 +420,18 @@ Trie* Bell::RootSolution(int bag) {
     sol = sol->next;
   }
   return res;
+}
+
+void Bell::FillMemorization() {
+  int max_bag = 0;
+  for(auto& b : bags) {
+    max_bag = max(max_bag, (int) b.size());
+  }
+  max_bag++;
+  memorization.resize(max_bag+1, vector<unsigned long long>(max_bag+1, 1));
+  for(int n = 1; n <= max_bag; n++) {
+    for(int k = max_bag-1; k >= 0; k--) {
+      memorization[n][k] = memorization[n-1][k+1] + k*memorization[n-1][k];
+    }
+  }
 }
