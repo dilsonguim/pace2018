@@ -87,7 +87,6 @@ vector<vector<int>> TreeDecomposition::getTree() {
 
 int TreeDecomposition::clearBags(const vector<vector<pair<int, int>>>& graph) {
    int operations = 0;
-
    vector<int> order(bags.size() - 1);
    for (int i = 1; i < bags.size(); i++) {
       order[i - 1] = i;
@@ -130,6 +129,7 @@ int TreeDecomposition::clearBags(const vector<vector<pair<int, int>>>& graph) {
             bags[bag_id].erase(i);
             inv_bags[i].erase(bag_id);
             operations++;
+            break;
          }
       }
    }
