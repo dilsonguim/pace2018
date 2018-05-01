@@ -358,7 +358,6 @@ bool bottleneckTest(Instance* instance, vector<Edge>& solution) {
       outer_dsf.join(a_i, b_i);
    }
 
-
    if (edges_to_include.empty()) return false;
 
    auto& graph = instance->graph;
